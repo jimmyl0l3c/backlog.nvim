@@ -70,12 +70,12 @@ jobs:
       uses: ColinKennedy/luarocks-rockspec-expander@v1.0.1
       with:
         input: template.rockspec
-        output: nvim-best-practices-plugin-template-scm-1.rockspec
+        output: backlog.nvim-scm-1.rockspec
         delete_input_after: true
 
     - name: Build Test Dependencies
       run: |
-        luarocks test nvim-best-practices-plugin-template-scm-1.rockspec --prepare
+        luarocks test backlog.nvim-scm-1.rockspec --prepare
 
     - name: Test
       run: |

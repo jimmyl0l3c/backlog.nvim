@@ -11,10 +11,10 @@ local specrev = "$specrev"
 local repo_url = "$repo_url"
 
 rockspec_format = "3.0"
-package = "nvim-best-practices-plugin-template"
+package = "backlog.nvim"
 version = modrev .. "-" .. specrev
 
-local user = "ColinKennedy"
+local user = "jimmyl0l3c"
 
 description = {
     homepage = "https://github.com/" .. user .. "/" .. package,

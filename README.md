@@ -4,9 +4,9 @@ A template repository used to create Neovim plugins.
 
 | <!-- --> | <!-- --> |
 |--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Build Status | [![unittests](https://img.shields.io/github/actions/workflow/status/ColinKennedy/nvim-best-practices-plugin-template/test.yml?branch=main&style=for-the-badge&label=Unittests)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/actions/workflows/test.yml) [![documentation](https://img.shields.io/github/actions/workflow/status/ColinKennedy/nvim-best-practices-plugin-template/documentation.yml?branch=main&style=for-the-badge&label=Documentation)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/actions/workflows/documentation.yml) [![luacheck](https://img.shields.io/github/actions/workflow/status/ColinKennedy/nvim-best-practices-plugin-template/luacheck.yml?branch=main&style=for-the-badge&label=Luacheck)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/actions/workflows/luacheck.yml) [![llscheck](https://img.shields.io/github/actions/workflow/status/ColinKennedy/nvim-best-practices-plugin-template/llscheck.yml?branch=main&style=for-the-badge&label=llscheck)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/actions/workflows/llscheck.yml) [![checkhealth](https://img.shields.io/github/actions/workflow/status/ColinKennedy/nvim-best-practices-plugin-template/checkhealth.yml?branch=main&style=for-the-badge&label=checkhealth)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/actions/workflows/checkhealth.yml) [![stylua](https://img.shields.io/github/actions/workflow/status/ColinKennedy/nvim-best-practices-plugin-template/stylua.yml?branch=main&style=for-the-badge&label=Stylua)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/actions/workflows/stylua.yml) [![urlchecker](https://img.shields.io/github/actions/workflow/status/ColinKennedy/nvim-best-practices-plugin-template/urlchecker.yml?branch=main&style=for-the-badge&label=URLChecker)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/actions/workflows/urlchecker.yml) [![mdformat](https://img.shields.io/github/actions/workflow/status/ColinKennedy/nvim-best-practices-plugin-template/mdformat.yml?branch=main&style=for-the-badge&label=mdformat)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/actions/workflows/mdformat.yml) |
-| License | [![License-MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/blob/main/LICENSE) |
-| Social | [![RSS](https://img.shields.io/badge/rss-F88900?style=for-the-badge&logo=rss&logoColor=white)](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/commits/main/doc/news.txt.atom) |
+| Build Status | [![unittests](https://img.shields.io/github/actions/workflow/status/jimmyl0l3c/backlog.nvim/test.yml?branch=main&style=for-the-badge&label=Unittests)](https://github.com/jimmyl0l3c/backlog.nvim/actions/workflows/test.yml) [![documentation](https://img.shields.io/github/actions/workflow/status/jimmyl0l3c/backlog.nvim/documentation.yml?branch=main&style=for-the-badge&label=Documentation)](https://github.com/jimmyl0l3c/backlog.nvim/actions/workflows/documentation.yml) [![luacheck](https://img.shields.io/github/actions/workflow/status/jimmyl0l3c/backlog.nvim/luacheck.yml?branch=main&style=for-the-badge&label=Luacheck)](https://github.com/jimmyl0l3c/backlog.nvim/actions/workflows/luacheck.yml) [![llscheck](https://img.shields.io/github/actions/workflow/status/jimmyl0l3c/backlog.nvim/llscheck.yml?branch=main&style=for-the-badge&label=llscheck)](https://github.com/jimmyl0l3c/backlog.nvim/actions/workflows/llscheck.yml) [![checkhealth](https://img.shields.io/github/actions/workflow/status/jimmyl0l3c/backlog.nvim/checkhealth.yml?branch=main&style=for-the-badge&label=checkhealth)](https://github.com/jimmyl0l3c/backlog.nvim/actions/workflows/checkhealth.yml) [![stylua](https://img.shields.io/github/actions/workflow/status/jimmyl0l3c/backlog.nvim/stylua.yml?branch=main&style=for-the-badge&label=Stylua)](https://github.com/jimmyl0l3c/backlog.nvim/actions/workflows/stylua.yml) [![urlchecker](https://img.shields.io/github/actions/workflow/status/jimmyl0l3c/backlog.nvim/urlchecker.yml?branch=main&style=for-the-badge&label=URLChecker)](https://github.com/jimmyl0l3c/backlog.nvim/actions/workflows/urlchecker.yml) [![mdformat](https://img.shields.io/github/actions/workflow/status/jimmyl0l3c/backlog.nvim/mdformat.yml?branch=main&style=for-the-badge&label=mdformat)](https://github.com/jimmyl0l3c/backlog.nvim/actions/workflows/mdformat.yml) |
+| License | [![License-MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](https://github.com/jimmyl0l3c/backlog.nvim/blob/main/LICENSE) |
+| Social | [![RSS](https://img.shields.io/badge/rss-F88900?style=for-the-badge&logo=rss&logoColor=white)](https://github.com/jimmyl0l3c/backlog.nvim/commits/main/doc/news.txt.atom) |
 
 # Features
 
@@ -35,13 +35,13 @@ A template repository used to create Neovim plugins.
 - Integrations
   - [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
   - [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
-  - [`:checkhealth`](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/actions/workflows/checkhealth.yml)
+  - [`:checkhealth`](https://github.com/jimmyl0l3c/backlog.nvim/actions/workflows/checkhealth.yml)
 - Github actions for:
   - [StyLua](https://github.com/JohnnyMorganz/StyLua) - Auto-formats Lua code
   - [llscheck](https://github.com/jeffzi/llscheck) - Checks for Lua type mismatches
   - [luacheck](https://github.com/mpeterv/luacheck) - Checks for Lua code issues
   - [luarocks](https://luarocks.org) auto-release ([LUAROCKS_API_KEY secret](https://github.com/nvim-neorocks/sample-luarocks-plugin?tab=readme-ov-file#publishing-to-luarocks) configuration required)
-  - [GitHub](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/releases) auto-release ([PERSONAL_ACCESS_TOKEN secret](https://github.com/nvim-neorocks/sample-luarocks-plugin?tab=readme-ov-file#installing-release-please-recommended) configuration required)
+  - [GitHub](https://github.com/jimmyl0l3c/backlog.nvim/releases) auto-release ([PERSONAL_ACCESS_TOKEN secret](https://github.com/nvim-neorocks/sample-luarocks-plugin?tab=readme-ov-file#installing-release-please-recommended) configuration required)
   - [mdformat](https://github.com/hukkin/mdformat) - Auto-formats project Markdown files
   - [mini.doc](https://github.com/echasnovski/mini.doc) - API documentation auto-generator
   - [panvimdoc](https://github.com/kdheepak/panvimdoc) - User documentation auto-generator
@@ -51,7 +51,7 @@ A template repository used to create Neovim plugins.
 
 # Using This Template
 
-1. Follow the [Wiki instructions](https://github.com/ColinKennedy/nvim-best-practices-plugin-template/wiki/Using-This-Template)
+1. Follow the [Wiki instructions](https://github.com/jimmyl0l3c/backlog.nvim/wiki/Using-This-Template)
 1. Run `make download-dependencies` so all the Lua LSP features work as expected.
 1. Once you're done, remove this section (the rest of this README.md file should be kept / customized to your needs)
 
@@ -63,7 +63,7 @@ A template repository used to create Neovim plugins.
 
 ```lua
 {
-    "ColinKennedy/nvim-best-practices-plugin-template",
+    "jimmyl0l3c/backlog.nvim",
     dependencies = { "ColinKennedy/mega.cmdparse", "ColinKennedy/mega.logging" },
     -- TODO: (you) - Make sure your first release matches v1.0.0 so it auto-releases!
     version = "v1.*",
@@ -80,9 +80,9 @@ A template repository used to create Neovim plugins.
 
 ```lua
 {
-    "ColinKennedy/nvim-best-practices-plugin-template",
+    "jimmyl0l3c/backlog.nvim",
     config = function()
-        vim.g.plugin_template_configuration = {
+        vim.g.backlog_configuration = {
             commands = {
                 goodnight_moon = { read = { phrase = "A good book" } },
                 hello_world = {
@@ -133,7 +133,7 @@ A template repository used to create Neovim plugins.
 <!-- TODO: (you) - Remove this is you do not want lualine -->
 
 > Note: You can customize lualine colors here or using
-> `vim.g.plugin_template_configuration`.
+> `vim.g.backlog_configuration`.
 
 [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
 
@@ -143,7 +143,7 @@ require("lualine").setup {
         lualine_y = {
             -- ... Your other configuration ...
             {
-                "plugin_template",
+                "backlog",
                 -- NOTE: These will override default values
                 -- display = {
                 --     goodnight_moon = {color={fg="#FFFFFF"}, text="Custom message 1"}},
@@ -160,7 +160,7 @@ require("lualine").setup {
 <!-- TODO: (you) - Remove this is you do not want telescope -->
 
 > Note: You can customize telescope colors here or using
-> `vim.g.plugin_template_configuration`.
+> `vim.g.backlog_configuration`.
 
 [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
 
@@ -170,10 +170,10 @@ require("lualine").setup {
     cmd = "Telescope",
     config = function()
         -- ... Your other configuration ...
-        require("telescope").load_extension("plugin_template")
+        require("telescope").load_extension("backlog")
     end,
     dependencies = {
-        "ColinKennedy/nvim-best-practices-plugin-template",
+        "jimmyl0l3c/backlog.nvim",
         "nvim-lua/plenary.nvim",
     },
     version = "0.1.*",
@@ -184,14 +184,14 @@ require("lualine").setup {
 
 This plugin provides two default highlights
 
-- `PluginTemplateTelescopeEntry`
-- `PluginTemplateTelescopeSecondary`
+- `BacklogTelescopeEntry`
+- `BacklogTelescopeSecondary`
 
 Both come with default colors that should look nice. If you want to change them, here's how:
 
 ```lua
-vim.api.nvim_set_hl(0, "PluginTemplateTelescopeEntry", {link="Statement"})
-vim.api.nvim_set_hl(0, "PluginTemplateTelescopeSecondary", {link="Question"})
+vim.api.nvim_set_hl(0, "BacklogTelescopeEntry", {link="Statement"})
+vim.api.nvim_set_hl(0, "BacklogTelescopeSecondary", {link="Question"})
 ```
 
 # Commands
@@ -200,20 +200,20 @@ Here are some example commands:
 
 <!-- TODO: (you) - You'll probably want to change all this or remove it. See -->
 
-<!-- plugin/plugin_template.lua for details. -->
+<!-- plugin/backlog.lua for details. -->
 
 ```vim
 " A typical subcommand
-:PluginTemplate hello-world say phrase "Hello, World!" " How are you?"
-:PluginTemplate hello-world say phrase "Hello, World!" --repeat=2 --style=lowercase
+:Backlog hello-world say phrase "Hello, World!" " How are you?"
+:Backlog hello-world say phrase "Hello, World!" --repeat=2 --style=lowercase
 
 " An example of a flag this repeatable and 3 flags, -a, -b, -c, as one dash
-:PluginTemplate arbitrary-thing -vvv -abc -f
+:Backlog arbitrary-thing -vvv -abc -f
 
 " Separate commands with completely separate, flexible APIs
-:PluginTemplate goodnight-moon count-sheep 42
-:PluginTemplate goodnight-moon read "a book"
-:PluginTemplate goodnight-moon sleep -z -z -z
+:Backlog goodnight-moon count-sheep 42
+:Backlog goodnight-moon read "a book"
+:Backlog goodnight-moon sleep -z -z -z
 ```
 
 # Tests
@@ -295,7 +295,7 @@ See [doc/news.txt](doc/news.txt) for updates.
 You can watch this plugin for changes by adding this URL to your RSS feed:
 
 ```
-https://github.com/ColinKennedy/nvim-best-practices-plugin-template/commits/main/doc/news.txt.atom
+https://github.com/jimmyl0l3c/backlog.nvim/commits/main/doc/news.txt.atom
 ```
 
 # Other Plugins

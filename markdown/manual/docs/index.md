@@ -1,4 +1,4 @@
 This website was generated automatically using
 a fancy Lua -> Markdown -> HTML translator. See
-[nvim-best-practices-plugin-template](https://github.com/ColinKennedy/nvim-best-practices-plugin-template)
+[backlog.nvim](https://github.com/jimmyl0l3c/backlog.nvim)
 for details!
