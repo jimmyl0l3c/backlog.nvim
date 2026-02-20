@@ -8,12 +8,14 @@ local _PREFIX = "Backlog"
 local _SUBCOMMANDS = function()
     local project_cmd = require("backlog._commands.project.parser")
     local open_cmd = require("backlog._commands.open.parser")
+    local close_cmd = require("backlog._commands.close.parser")
 
     local parser = cmdparse.ParameterParser.new({ name = _PREFIX, help = "The root of all commands." })
     local subparsers = parser:add_subparsers({ "commands", help = "All runnable commands." })
 
     subparsers:add_parser(project_cmd.make_parser())
     subparsers:add_parser(open_cmd.make_parser())
+    subparsers:add_parser(close_cmd.make_parser())
 
     return parser
 end
