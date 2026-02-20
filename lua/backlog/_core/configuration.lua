@@ -33,11 +33,13 @@ local _DEFAULTS = {
             icon = "",
             highlight = "BacklogHighlight",
             scope_highlight = "BacklogNameHighlight",
+            ticket_highlight = "BacklogTicketHighlight",
         },
         [states.Priority] = {
             icon = "",
             highlight = "BacklogWarn",
             scope_highlight = "BacklogNameWarn",
+            ticket_highlight = "BacklogTicketHighlight",
         },
         [states.Cancelled] = {
             icon = "󰰱",

@@ -28,7 +28,6 @@ data.load()
 function M.setup(opts) vim.g.backlog_configuration = opts end
 
 local function render(buf)
-    vim.bo[buf].readonly = false
     vim.bo[buf].modifiable = true
 
     local lines = {}
@@ -51,9 +50,9 @@ local function render(buf)
         local is_selected = i == M.cursor
 
         local state = configuration.DATA.states[item.state]
-        append("  ", is_selected and "BacklogSelected" or nil)
+        append("  ", nil)
         append(state.icon, state.highlight or nil)
-        append(" ", is_selected and "BacklogSelected" or nil)
+        append(" ", nil)
         append(item.ticket, state.ticket_highlight or "BacklogTicket")
         append(" ", nil)
         append(item.title, state.scope_highlight or "BacklogName")
@@ -65,7 +64,6 @@ local function render(buf)
     end
 
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-    vim.bo[buf].readonly = true
     vim.bo[buf].modifiable = false
 
     vim.api.nvim_buf_clear_namespace(buf, M.ns, 0, -1)
@@ -98,6 +96,7 @@ local function map_state(buf, key, state)
         local item = M.items[M.cursor]
         if item then
             item.state = state
+            item.done_timestamp = (state == states.Done or state == states.Cancelled) and os.date("%Y-%m-%d") or ""
             render(buf)
         end
     end)
@@ -126,8 +125,15 @@ local function setup_keymaps(buf)
         local item = M.items[M.cursor]
         if item then
             item.state = item.state == states.Done and states.ToDo or states.Done
+            item.done_timestamp = item.state == states.Done and os.date("%Y-%m-%d") or ""
             render(buf)
         end
+    end)
+
+    map(buf, "q", function()
+        if not M.win or not vim.api.nvim_win_is_valid(M.win) then return end
+        vim.api.nvim_win_close(M.win, false)
+        M.win = nil
     end)
 
     vim.api.nvim_create_autocmd("CursorMoved", {
@@ -138,6 +144,14 @@ local function setup_keymaps(buf)
             M.cursor = math.max(cur - header_lines, 1)
             if cur < first then vim.api.nvim_win_set_cursor(0, { first, 0 }) end
             render(buf)
+        end,
+    })
+
+    vim.api.nvim_create_autocmd("BufWriteCmd", {
+        buffer = buf,
+        callback = function()
+            data.save()
+            vim.bo[buf].modified = false
         end,
     })
 end
@@ -154,8 +168,9 @@ local function setup_highlights()
     vim.api.nvim_set_hl(0, "BacklogHighlight", { fg = "#9ccfd8" })
     vim.api.nvim_set_hl(0, "BacklogDone", { fg = "#a6e3a1" })
 
-    vim.api.nvim_set_hl(0, "BacklogTicket", { fg = "#9ccfd8", bold = true })
-    vim.api.nvim_set_hl(0, "BacklogTicketSubtle", { fg = "#31748f", bold = true })
+    vim.api.nvim_set_hl(0, "BacklogTicket", { fg = "#31748f", bold = true })
+    vim.api.nvim_set_hl(0, "BacklogTicketHighlight", { fg = "#9ccfd8", bold = true })
+    vim.api.nvim_set_hl(0, "BacklogTicketSubtle", { fg = "#908caa", bold = true })
 
     vim.api.nvim_set_hl(0, "BacklogName", { fg = "#cdd6f4" })
     vim.api.nvim_set_hl(0, "BacklogNameWarn", { fg = "#f6c177", bold = true })
@@ -170,7 +185,7 @@ function M.open_sidebar()
 
         local buf = vim.api.nvim_create_buf(true, true)
         vim.api.nvim_buf_set_name(buf, "todo")
-        vim.bo[buf].buftype = "nofile"
+        vim.bo[buf].buftype = "acwrite"
 
         setup_highlights()
         setup_keymaps(buf)
@@ -178,7 +193,7 @@ function M.open_sidebar()
         M.buf = buf
     end
 
-    vim.api.nvim_open_win(M.buf, true, { split = "right" })
+    M.win = vim.api.nvim_open_win(M.buf, true, { split = "right" })
 end
 
 -- TODO: (you) - Change this file to whatever you need. These are just examples
