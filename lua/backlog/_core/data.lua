@@ -28,6 +28,8 @@ function M.new_task(opts)
         ticket = opts.ticket or "",
         priority = opts.priority or 100,
         detail = opts.detail or "",
+        added_timestamp = os.date("%Y-%m-%d"),
+        done_timestamp = opts.done_timestamp or "",
         comments = opts.comments or {},
     }
 end

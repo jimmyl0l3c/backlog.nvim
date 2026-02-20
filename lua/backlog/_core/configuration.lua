@@ -4,6 +4,8 @@ local say_constant = require("backlog._commands.hello_world.say.constant")
 
 local logging = require("mega.logging")
 
+local states = require("backlog._core.states")
+
 local _LOGGER = logging.get_logger("backlog._core.configuration")
 
 local M = {}
@@ -22,6 +24,41 @@ M.DATA = {}
 ---@type backlog.Configuration
 local _DEFAULTS = {
     logging = { level = "info", use_console = false, use_file = false },
+    states = {
+        [states.ToDo] = {
+            icon = "󰄱",
+            highlight = "BacklogSubtle",
+        },
+        [states.Next] = {
+            icon = "",
+            highlight = "BacklogHighlight",
+            scope_highlight = "BacklogNameHighlight",
+        },
+        [states.Priority] = {
+            icon = "",
+            highlight = "BacklogWarn",
+            scope_highlight = "BacklogNameWarn",
+        },
+        [states.Cancelled] = {
+            icon = "󰰱",
+            highlight = "BacklogError",
+            scope_highlight = "BacklogNameSubtle",
+            ticket_highlight = "BacklogTicketSubtle",
+        },
+        [states.Done] = {
+            icon = "",
+            highlight = "BacklogDone",
+            scope_highlight = "BacklogNameSubtle",
+            ticket_highlight = "BacklogTicketSubtle",
+        },
+    },
+    keys = {
+        [states.ToDo] = { "r" },
+        [states.Next] = { ">", "n" },
+        [states.Priority] = { "!" },
+        [states.Cancelled] = { "~", "D" },
+        [states.Done] = { "x" },
+    },
 }
 
 -- TODO: (you) Update these sections depending on your intended plugin features.
@@ -71,9 +108,7 @@ _DEFAULTS = vim.tbl_deep_extend("force", _DEFAULTS, _EXTRA_DEFAULTS)
 
 --- Setup `backlog` for the first time, if needed.
 function M.initialize_data_if_needed()
-    if vim.g.loaded_backlog then
-        return
-    end
+    if vim.g.loaded_backlog then return end
 
     M.DATA = vim.tbl_deep_extend("force", _DEFAULTS, vim.g.backlog_configuration or {})
 

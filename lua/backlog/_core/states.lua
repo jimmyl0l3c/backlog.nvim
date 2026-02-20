@@ -1,6 +1,7 @@
 return {
-    ToDo = { id = "todo", char = " " },
-    Next = { id = "next", char = ">" },
-    Priority = { id = "prio", char = "!" },
-    Done = { id = "done", char = "x" },
+    ToDo = "todo",
+    Next = "next",
+    Priority = "prio",
+    Cancelled = "cancel",
+    Done = "done",
 }

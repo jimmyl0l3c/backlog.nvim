@@ -14,6 +14,8 @@ local read = require("backlog._commands.goodnight_moon.read")
 local say_runner = require("backlog._commands.hello_world.say.runner")
 local sleep = require("backlog._commands.goodnight_moon.sleep")
 
+local header_lines = 1
+
 local M = { cursor = 1, items = {} }
 
 configuration.initialize_data_if_needed()
@@ -25,41 +27,100 @@ data.load()
 ---
 function M.setup(opts) vim.g.backlog_configuration = opts end
 
-local function set_buf_lines(buf, lines)
-    if not buf then return end
-    vim.bo[buf].modifiable = true
-    vim.bo[buf].readonly = false
-
-    vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
-
-    vim.bo[buf].modifiable = false
-    vim.bo[buf].readonly = true
-end
-
 local function render(buf)
-    local lines = { "TODOs" }
+    vim.bo[buf].readonly = false
+    vim.bo[buf].modifiable = true
+
+    local lines = {}
+    local marks = {} -- {row, col_start, col_end, hl_group}
+
+    local title = " Backlog"
+    table.insert(lines, title)
+
     for i, item in ipairs(M.items) do
-        local prefix = i == M.cursor and "> " or "  "
-        local status = item.state == states.Done and "[x]" or "[ ]"
-        table.insert(lines, prefix .. status .. " " .. item.title)
+        local row = i - 1 + header_lines
+        local col = 0
+        local line = ""
+
+        local function append(text, hl_group)
+            if hl_group then table.insert(marks, { row, col, col + #text, hl_group }) end
+            line = line .. text
+            col = col + #text
+        end
+
+        local is_selected = i == M.cursor
+
+        local state = configuration.DATA.states[item.state]
+        append("  ", is_selected and "BacklogSelected" or nil)
+        append(state.icon, state.highlight or nil)
+        append(" ", is_selected and "BacklogSelected" or nil)
+        append(item.ticket, state.ticket_highlight or "BacklogTicket")
+        append(" ", nil)
+        append(item.title, state.scope_highlight or "BacklogName")
+
+        table.insert(lines, line)
+
+        -- full-line select
+        if is_selected then table.insert(marks, { row, 0, #line, "BacklogSelected", hl_eol = true, priority = 100 }) end
     end
-    set_buf_lines(buf, lines)
+
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    vim.bo[buf].readonly = true
+    vim.bo[buf].modifiable = false
+
+    vim.api.nvim_buf_clear_namespace(buf, M.ns, 0, -1)
+
+    local border = string.rep("─", #title + 1)
+
+    vim.api.nvim_buf_set_extmark(buf, M.ns, 0, 0, {
+        end_col = #lines[1],
+        hl_group = "BacklogTitle",
+        priority = 200,
+        virt_lines = {
+            { { border, "BacklogBorder" } },
+        },
+        virt_lines_above = false, -- render below the title line
+    })
+    for _, m in ipairs(marks) do
+        vim.api.nvim_buf_set_extmark(buf, M.ns, m[1], m[2], {
+            end_col = m[3],
+            hl_group = m[4],
+            hl_eol = m.hl_eol,
+            priority = m.priority or 200,
+        })
+    end
 end
 
 local function map(buf, key, fn) vim.keymap.set("n", key, fn, { buffer = buf, noremap = true, silent = true }) end
+
+local function map_state(buf, key, state)
+    map(buf, key, function()
+        local item = M.items[M.cursor]
+        if item then
+            item.state = state
+            render(buf)
+        end
+    end)
+end
 
 local function setup_keymaps(buf)
     map(buf, "j", function()
         M.cursor = math.min(M.cursor + vim.v.count1, #M.items)
         render(buf)
-        vim.api.nvim_win_set_cursor(0, { M.cursor + 1, 0 })
+        vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
     end)
 
     map(buf, "k", function()
         M.cursor = math.max(M.cursor - vim.v.count1, 1)
         render(buf)
-        vim.api.nvim_win_set_cursor(0, { M.cursor + 1, 0 })
+        vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
     end)
+
+    for state, keys in pairs(configuration.DATA.keys) do
+        for _, key in ipairs(keys) do
+            map_state(buf, key, state)
+        end
+    end
 
     map(buf, "<CR>", function()
         local item = M.items[M.cursor]
@@ -73,21 +134,45 @@ local function setup_keymaps(buf)
         buffer = buf,
         callback = function()
             local cur = vim.api.nvim_win_get_cursor(0)[1]
-            M.cursor = math.max(cur - 1, 1)
-            if cur == 1 then vim.api.nvim_win_set_cursor(0, { 2, 0 }) end
+            local first = header_lines + 1
+            M.cursor = math.max(cur - header_lines, 1)
+            if cur < first then vim.api.nvim_win_set_cursor(0, { first, 0 }) end
             render(buf)
         end,
     })
 end
 
+local function setup_highlights()
+    vim.api.nvim_set_hl(0, "BacklogTitle", { fg = "#c4a7e7", bold = true })
+    vim.api.nvim_set_hl(0, "BacklogBorder", { fg = "#45475a" })
+
+    vim.api.nvim_set_hl(0, "BacklogSelected", { link = "Visual" })
+
+    vim.api.nvim_set_hl(0, "BacklogSubtle", { fg = "#908caa" })
+    vim.api.nvim_set_hl(0, "BacklogWarn", { fg = "#f6c177" })
+    vim.api.nvim_set_hl(0, "BacklogError", { fg = "#ebbcba" })
+    vim.api.nvim_set_hl(0, "BacklogHighlight", { fg = "#9ccfd8" })
+    vim.api.nvim_set_hl(0, "BacklogDone", { fg = "#a6e3a1" })
+
+    vim.api.nvim_set_hl(0, "BacklogTicket", { fg = "#9ccfd8", bold = true })
+    vim.api.nvim_set_hl(0, "BacklogTicketSubtle", { fg = "#31748f", bold = true })
+
+    vim.api.nvim_set_hl(0, "BacklogName", { fg = "#cdd6f4" })
+    vim.api.nvim_set_hl(0, "BacklogNameWarn", { fg = "#f6c177", bold = true })
+    vim.api.nvim_set_hl(0, "BacklogNameHighlight", { fg = "#9ccfd8", bold = true })
+    vim.api.nvim_set_hl(0, "BacklogNameSubtle", { fg = "#6e6a86", italic = true })
+end
+
 function M.open_sidebar()
     if not M.buf then
         M.items = data.store.tasks
+        M.ns = vim.api.nvim_create_namespace("backlog")
 
         local buf = vim.api.nvim_create_buf(true, true)
         vim.api.nvim_buf_set_name(buf, "todo")
         vim.bo[buf].buftype = "nofile"
 
+        setup_highlights()
         setup_keymaps(buf)
         render(buf)
         M.buf = buf
