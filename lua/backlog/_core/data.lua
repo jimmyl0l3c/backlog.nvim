@@ -1,4 +1,4 @@
-local M = {}
+local M = { store = {} }
 
 local data_path = vim.fn.stdpath("data") .. "/backlog/data.json"
 
@@ -50,12 +50,12 @@ function M.load()
     -- Ensure both keys exist
     data.projects = data.projects or {}
     data.tasks = data.tasks or {}
-    return data
+    M.store = data
 end
 
-function M.save(store)
+function M.save()
     ensure_dir()
-    local ok, encoded = pcall(vim.fn.json_encode, store)
+    local ok, encoded = pcall(vim.fn.json_encode, M.store)
     if not ok then
         vim.notify("backlog: failed to encode data", vim.log.levels.ERROR)
         return false
@@ -64,54 +64,54 @@ function M.save(store)
     return true
 end
 
-function M.add_project(store, opts)
-    if M.find_project(store, opts.id) then
+function M.add_project(opts)
+    if M.find_project(opts.id) then
         vim.notify("backlog: project id already exists: " .. opts.id, vim.log.levels.WARN)
         return nil
     end
     local proj = M.new_project(opts)
-    table.insert(store.projects, proj)
+    table.insert(M.store.projects, proj)
     return proj
 end
 
-function M.find_project(store, id)
-    for i, p in ipairs(store.projects) do
+function M.find_project(id)
+    for i, p in ipairs(M.store.projects) do
         if p.id == id then return p, i end
     end
     return nil
 end
 
-function M.remove_project(store, id)
-    local _, i = M.find_project(store, id)
+function M.remove_project(id)
+    local _, i = M.find_project(id)
     if not i then return false end
-    table.remove(store.projects, i)
-    store.tasks = vim.tbl_filter(function(t) return t.project ~= id end, store.tasks)
+    table.remove(M.store.projects, i)
+    M.store.tasks = vim.tbl_filter(function(t) return t.project ~= id end, M.store.tasks)
     return true
 end
 
-function M.add_task(store, opts)
-    if not M.find_project(store, opts.project) then
+function M.add_task(opts)
+    if not M.find_project(opts.project) then
         vim.notify("backlog: unknown project id: " .. opts.project, vim.log.levels.ERROR)
         return nil
     end
     local task = M.new_task(opts)
-    table.insert(store.tasks, task)
+    table.insert(M.store.tasks, task)
     return task
 end
 
-function M.tasks_for_project(store, project_id)
-    return vim.tbl_filter(function(t) return t.project == project_id end, store.tasks)
+function M.tasks_for_project(project_id)
+    return vim.tbl_filter(function(t) return t.project == project_id end, M.store.tasks)
 end
 
-function M.find_task(store, project_id, title)
-    for i, t in ipairs(store.tasks) do
+function M.find_task(project_id, title)
+    for i, t in ipairs(M.store.tasks) do
         if t.project == project_id and t.title == title then return t, i end
     end
     return nil
 end
 
-function M.add_comment(store, task_index, content)
-    local task = store.tasks[task_index]
+function M.add_comment(task_index, content)
+    local task = M.store.tasks[task_index]
     if not task then
         vim.notify("backlog: task not found at index " .. task_index, vim.log.levels.WARN)
         return
