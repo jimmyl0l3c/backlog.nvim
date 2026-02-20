@@ -77,7 +77,7 @@ local function render(buf)
         virt_lines = {
             { { border, "BacklogBorder" } },
         },
-        virt_lines_above = false, -- render below the title line
+        virt_lines_above = false,
     })
     for _, m in ipairs(marks) do
         vim.api.nvim_buf_set_extmark(buf, M.ns, m[1], m[2], {
@@ -130,11 +130,7 @@ local function setup_keymaps(buf)
         end
     end)
 
-    map(buf, "q", function()
-        if not M.win or not vim.api.nvim_win_is_valid(M.win) then return end
-        vim.api.nvim_win_close(M.win, false)
-        M.win = nil
-    end)
+    map(buf, "q", M.close_sidebar)
 
     vim.api.nvim_create_autocmd("CursorMoved", {
         buffer = buf,
@@ -178,6 +174,7 @@ local function setup_highlights()
     vim.api.nvim_set_hl(0, "BacklogNameSubtle", { fg = "#6e6a86", italic = true })
 end
 
+--- Open sidebar with all tasks
 function M.open_sidebar()
     if not M.buf then
         M.items = data.store.tasks
@@ -193,7 +190,14 @@ function M.open_sidebar()
         M.buf = buf
     end
 
-    M.win = vim.api.nvim_open_win(M.buf, true, { split = "right" })
+    M.win = vim.api.nvim_open_win(M.buf, true, configuration.DATA.win_opts)
+end
+
+--- Close sidebar. Noop if sidebar is not open.
+function M.close_sidebar()
+    if not M.win or not vim.api.nvim_win_is_valid(M.win) then return end
+    vim.api.nvim_win_close(M.win, false)
+    M.win = nil
 end
 
 -- TODO: (you) - Change this file to whatever you need. These are just examples

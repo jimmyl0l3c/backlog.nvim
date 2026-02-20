@@ -8,13 +8,21 @@ local function ensure_dir()
 end
 
 function M.new_project(opts)
-    assert(opts.id, "project requires an id")
-    assert(opts.title, "project requires a title")
-    return {
+    if not opts.id then
+        vim.notify("project id is required", vim.log.levels.ERROR)
+        return false
+    end
+
+    M.store.projects = M.store.projects or {}
+
+    if M.find_project(opts.id) ~= nil then return false end
+
+    table.insert(M.store.projects, {
         id = opts.id,
-        title = opts.title,
+        title = opts.title or opts.id,
         path = opts.path or "",
-    }
+    })
+    return true
 end
 
 function M.new_task(opts)

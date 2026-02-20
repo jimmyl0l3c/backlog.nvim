@@ -24,6 +24,7 @@ M.DATA = {}
 ---@type backlog.Configuration
 local _DEFAULTS = {
     logging = { level = "info", use_console = false, use_file = false },
+    win_opts = { split = "right" },
     states = {
         [states.ToDo] = {
             icon = "󰄱",
