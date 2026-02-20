@@ -50,13 +50,13 @@ local function map(buf, key, fn) vim.keymap.set("n", key, fn, { buffer = buf, no
 
 local function setup_keymaps(buf)
     map(buf, "j", function()
-        M.cursor = math.min(M.cursor + 1, #M.items)
+        M.cursor = math.min(M.cursor + vim.v.count1, #M.items)
         render(buf)
         vim.api.nvim_win_set_cursor(0, { M.cursor + 1, 0 })
     end)
 
     map(buf, "k", function()
-        M.cursor = math.max(M.cursor - 1, 1)
+        M.cursor = math.max(M.cursor - vim.v.count1, 1)
         render(buf)
         vim.api.nvim_win_set_cursor(0, { M.cursor + 1, 0 })
     end)
