@@ -17,7 +17,7 @@ function M.run(project)
 
     local items = project and data.tasks_for_project(project) or data.store.tasks
 
-    -- TODO: open sidebar
+    require("backlog._core.sidebar").open(items)
 end
 
 return M
