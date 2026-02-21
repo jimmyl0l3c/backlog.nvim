@@ -13,11 +13,7 @@ local M = {}
 function M.run(project)
     _LOGGER:debug("Filtering tasks by project.", project)
 
-    local data = require("backlog._core.data")
-
-    local items = project and data.tasks_for_project(project) or data.store.tasks
-
-    require("backlog._core.sidebar").open(items)
+    require("backlog._core.sidebar").open(project)
 end
 
 return M

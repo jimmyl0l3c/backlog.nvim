@@ -1,9 +1,10 @@
 local configuration = require("backlog._core.configuration")
+local data = require("backlog._core.data")
 local states = require("backlog._core.states")
 
 local header_lines = 1
 
-local M = { cursor = 1, items = {} }
+local M = { cursor = 1, items = {}, project = nil }
 
 local function render(buf)
     vim.bo[buf].modifiable = true
@@ -12,6 +13,8 @@ local function render(buf)
     local marks = {} -- {row, col_start, col_end, hl_group}
 
     local title = " Backlog"
+    if M.project then title = title .. " - " .. M.project.title end
+
     table.insert(lines, title)
 
     for i, item in ipairs(M.items) do
@@ -69,14 +72,26 @@ local function render(buf)
     vim.bo[buf].modified = false
 end
 
+local function update_items(buf, project_id)
+    local project = project_id and data.find_project(project_id) or nil
+    local items = project_id and data.tasks_for_project(project_id) or data.store.tasks
+
+    M.project = project
+    M.items = items
+
+    render(buf or M.buf)
+end
+
 local function map(buf, key, fn) vim.keymap.set("n", key, fn, { buffer = buf, noremap = true, silent = true }) end
 
 local function map_state(buf, key, state)
     map(buf, key, function()
         local item = M.items[M.cursor]
-        if item then
-            item.state = state
-            item.done_timestamp = (state == states.Done or state == states.Cancelled) and os.date("%Y-%m-%d") or ""
+        if not item then return end
+
+        local updated = data.set_task_state(item.id, state)
+        if updated then
+            M.items[M.cursor] = updated
             render(buf)
         end
     end)
@@ -112,6 +127,30 @@ local function setup_keymaps(buf)
 
     map(buf, "q", M.close)
 
+    map(buf, "a", function()
+        vim.ui.input({ prompt = "Add task" }, function(input)
+            if not input then return end
+            local project_id = M.project and M.project.id or nil
+            data.add_task({ project = project_id, title = input })
+            update_items(buf, project_id)
+        end)
+    end)
+
+    map(buf, "e", function()
+        local item = M.items[M.cursor]
+        if not item then return end
+        vim.ui.input({ prompt = "Edit task", default = item.title }, function(input)
+            if not input or input == item.title then return end
+
+            local updated = data.edit_task(item.id, { title = input })
+            if not updated then return end
+            M.items[M.cursor] = updated
+            render(buf)
+        end)
+    end)
+end
+
+local function setup_listeners(buf)
     vim.api.nvim_create_autocmd("CursorMoved", {
         buffer = buf,
         callback = function()
@@ -126,7 +165,7 @@ local function setup_keymaps(buf)
     vim.api.nvim_create_autocmd("BufWriteCmd", {
         buffer = buf,
         callback = function()
-            require("backlog._core.data").save()
+            data.save()
             vim.bo[buf].modified = false
         end,
     })
@@ -160,8 +199,8 @@ local function setup_highlights()
     vim.api.nvim_set_hl(0, "BacklogNameSubtle", { fg = "#6e6a86", italic = true })
 end
 
---- Open sidebar with specified items
-function M.open(items)
+--- Open sidebar with specified project's tasks or all when project is nil
+function M.open(project_id)
     if not M.buf then
         M.ns = vim.api.nvim_create_namespace("backlog")
 
@@ -171,11 +210,11 @@ function M.open(items)
 
         setup_highlights()
         setup_keymaps(buf)
+        setup_listeners(buf)
         M.buf = buf
     end
 
-    M.items = items
-    render(M.buf)
+    update_items(nil, project_id)
 
     if not M.win then M.win = vim.api.nvim_open_win(M.buf, true, configuration.DATA.win_opts) end
 end

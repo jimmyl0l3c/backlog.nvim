@@ -1,35 +1,37 @@
-local M = { store = {} }
+local states = require("backlog._core.states")
 
 local data_path = vim.fn.stdpath("data") .. "/backlog/data.json"
+
+local global_project = {
+    id = "global",
+    title = "Global",
+    path = nil,
+}
+
+local M = { store = {} }
 
 local function ensure_dir()
     local dir = vim.fn.fnamemodify(data_path, ":h")
     if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, "p") end
 end
 
+math.randomseed(os.time())
+local function uid() return string.format("%x%x", os.time(), math.random(0xffff)) end
+
 function M.new_project(opts)
-    if not opts.id then
-        vim.notify("project id is required", vim.log.levels.ERROR)
-        return false
-    end
-
-    M.store.projects = M.store.projects or {}
-
-    if M.find_project(opts.id) ~= nil then return false end
-
-    table.insert(M.store.projects, {
+    assert(opts.id, "project requires an id")
+    return {
         id = opts.id,
         title = opts.title or opts.id,
         path = opts.path or "",
-    })
-    return true
+    }
 end
 
 function M.new_task(opts)
-    assert(opts.project, "task requires a project id")
     assert(opts.title, "task requires a title")
     return {
-        project = opts.project, -- project.id
+        id = uid(),
+        project = opts.project or global_project.id,
         title = opts.title,
         state = opts.state or "todo",
         deadline = opts.deadline or "",
@@ -57,10 +59,10 @@ function M.load()
         vim.notify("backlog: failed to parse data.json", vim.log.levels.ERROR)
         return { projects = {}, tasks = {} }
     end
-    -- Ensure both keys exist
     data.projects = data.projects or {}
     data.tasks = data.tasks or {}
     M.store = data
+    if not M.find_project(global_project.id) then M.add_project(global_project) end
 end
 
 function M.save()
@@ -75,8 +77,13 @@ function M.save()
 end
 
 function M.add_project(opts)
+    if not opts.id then
+        vim.notify("project id is required", vim.log.levels.ERROR)
+        return nil
+    end
+
     if M.find_project(opts.id) then
-        vim.notify("backlog: project id already exists: " .. opts.id, vim.log.levels.WARN)
+        vim.notify("backlog: project id already exists: " .. opts.id, vim.log.levels.ERROR)
         return nil
     end
     local proj = M.new_project(opts)
@@ -100,8 +107,15 @@ function M.remove_project(id)
 end
 
 function M.add_task(opts)
+    if not opts.title then
+        vim.notify("backlog: task title is required", vim.log.levels.ERROR)
+        return nil
+    end
+
+    opts.project = opts.project or global_project.id
+
     if not M.find_project(opts.project) then
-        vim.notify("backlog: unknown project id: " .. opts.project, vim.log.levels.ERROR)
+        vim.notify("backlog: unknown project id: " .. (opts.project or "nil"), vim.log.levels.ERROR)
         return nil
     end
     local task = M.new_task(opts)
@@ -113,9 +127,9 @@ function M.tasks_for_project(project_id)
     return vim.tbl_filter(function(t) return t.project == project_id end, M.store.tasks)
 end
 
-function M.find_task(project_id, title)
-    for i, t in ipairs(M.store.tasks) do
-        if t.project == project_id and t.title == title then return t, i end
+function M.find_task(id)
+    for i, p in ipairs(M.store.tasks) do
+        if p.id == id then return p, i end
     end
     return nil
 end
@@ -127,6 +141,43 @@ function M.add_comment(task_index, content)
         return
     end
     table.insert(task.comments, M.new_comment(content))
+end
+
+function M.edit_task(task_id, opts)
+    local p, i = M.find_task(task_id)
+    if not p or not i then
+        vim.notify("backlog: task not found", vim.log.levels.ERROR)
+        return nil
+    end
+
+    local updated = {
+        id = p.id,
+        project = opts.project or p.project,
+        title = opts.title or p.title,
+        state = p.state,
+        deadline = opts.deadline or p.deadline,
+        ticket = opts.ticket or p.ticket,
+        priority = opts.priority or p.priority,
+        detail = opts.detail or p.detail,
+        added_timestamp = p.added_timestamp,
+        done_timestamp = p.done_timestamp,
+        comments = opts.comments or p.comments,
+    }
+    M.store.tasks[i] = updated
+    return updated
+end
+
+function M.set_task_state(task_id, state)
+    local p, i = M.find_task(task_id)
+    if not p or not i then
+        vim.notify("backlog: task not found", vim.log.levels.ERROR)
+        return nil
+    end
+
+    p.state = state or "todo"
+    p.done_timestamp = (p.state == states.Done or p.state == states.Cancelled) and os.date("%Y-%m-%d") or ""
+    M.store.tasks[i] = p
+    return p
 end
 
 return M

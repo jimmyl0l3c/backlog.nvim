@@ -17,10 +17,7 @@ function M.run(id, title, path)
 
     local data = require("backlog._core.data")
 
-    if not data.new_project({ id = id, title = title, path = path }) then
-        vim.notify("Project could not be created: " .. id, vim.log.levels.ERROR)
-        return
-    end
+    if not data.add_project({ id = id, title = title, path = path }) then return end
 
     vim.notify("Project created: " .. id, vim.log.levels.INFO)
 
