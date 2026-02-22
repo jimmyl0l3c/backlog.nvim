@@ -4,14 +4,40 @@
 --- operation of this Lua plugin.
 ---
 
----@class backlog.Configuration
----    The user's customizations for this plugin.
----@field commands backlog.ConfigurationCommands?
----    Customize the fallback behavior of all `:Backlog` commands.
----@field logging backlog.LoggingConfiguration?
----    Control how and which logs print to file / Neovim.
----@field tools backlog.ConfigurationTools?
----    Optional third-party tool integrations.
+---@class backlog.Project The project for grouping tasks.
+---@field id string Human-readable project id.
+---@field title string Optional more descriptive title of a project, uses id otherwise.
+---@field path string? Optional path pattern for automatic detection of project.
+
+---@class backlog.Task A task.
+---@field id string Automatically generated id used to idetify tasks.
+---@field project string Project id the task belongs to.
+---@field title string Task title, the main information shown in the backlog.
+---@field state backlog.States State of the task, should be one of `backlog.States`
+---@field deadline string Optional task deadline, should be in format `%Y-%m-%d`.
+---@field ticket string Optional ticket number the task is related to. (e.g. GH issue number)
+---@field priority number Priority of the task used for sorting backlog.
+---@field detail string Optional detailed description of the task.
+---@field added_timestamp string Created timestamp, automatically set when creating a task.
+---@field done_timestamp string Done/cancelled timestamp, automatically set when state changes to
+---@field comments backlog.TaskComment[] Optional comments of a task.
+
+---@class backlog.TaskComment A task comment.
+---@field content string Comments content.
+---@field timestamp string Created timestamp, automatically set when creating a comment.
+
+---@class backlog.Configuration The user's customizations for this plugin.
+---@field commands backlog.ConfigurationCommands? Customize the fallback behavior of all `:Backlog` commands.
+---@field logging backlog.LoggingConfiguration? Control how and which logs print to file / Neovim.
+---@field win_opts vim.api.keyset.win_config? Sidebar window config.
+---@field states table<backlog.States, backlog.StateConfiguration>? Customize how tasks are displayed based on their state.
+---@field tools backlog.ConfigurationTools? Optional third-party tool integrations.
+
+---@class backlog.StateConfiguration
+---@field icon string Icon displayed in the task list.
+---@field highlight string Highlight group used for the icon.
+---@field scope_highlight string? Highlight group used for the task title.
+---@field ticket_highlight string? Highlight group used for the ticket of the task.
 
 ---@class backlog.ConfigurationCommands
 ---    Customize the fallback behavior of all `:Backlog` commands.

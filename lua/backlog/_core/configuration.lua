@@ -1,7 +1,5 @@
 --- All functions and data to help customize `backlog` for this user.
 
-local say_constant = require("backlog._commands.hello_world.say.constant")
-
 local logging = require("mega.logging")
 
 local states = require("backlog._core.states")
@@ -68,9 +66,6 @@ local _DEFAULTS = {
 local _EXTRA_DEFAULTS = {
     commands = {
         goodnight_moon = { read = { phrase = "A good book" } },
-        hello_world = {
-            say = { ["repeat"] = 1, style = say_constant.Keyword.style.lowercase },
-        },
     },
     tools = {
         lualine = {

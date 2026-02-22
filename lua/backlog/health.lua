@@ -6,7 +6,6 @@
 
 local configuration_ = require("backlog._core.configuration")
 local logging_ = require("mega.logging")
-local say_constant = require("backlog._commands.hello_world.say.constant")
 local tabler = require("backlog._core.tabler")
 local texter = require("backlog._core.texter")
 

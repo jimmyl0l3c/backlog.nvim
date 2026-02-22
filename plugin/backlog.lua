@@ -24,9 +24,9 @@ cmdparse.create_user_command(_SUBCOMMANDS, _PREFIX)
 
 vim.keymap.set("n", "<Plug>(BacklogSayHi)", function()
     local configuration = require("backlog._core.configuration")
-    local backlog = require("backlog")
+    -- local backlog = require("backlog")
 
     configuration.initialize_data_if_needed()
 
-    backlog.run_hello_world_say_word("Hi!")
-end, { desc = "Say hi to the user." })
+    require("backlog._core.sidebar").open(nil)
+end, { desc = "Open task sidebar." })

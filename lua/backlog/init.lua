@@ -6,12 +6,9 @@
 
 local data = require("backlog._core.data")
 local configuration = require("backlog._core.configuration")
-local arbitrary_thing_runner = require("backlog._commands.arbitrary_thing.runner")
-local copy_logs_runner = require("backlog._commands.copy_logs.runner")
-local count_sheep = require("backlog._commands.goodnight_moon.count_sheep")
-local read = require("backlog._commands.goodnight_moon.read")
-local say_runner = require("backlog._commands.hello_world.say.runner")
-local sleep = require("backlog._commands.goodnight_moon.sleep")
+
+local open_cmd = require("backlog._commands.open.runner")
+local close_cmd = require("backlog._commands.close.runner")
 
 local M = {}
 
@@ -24,60 +21,15 @@ data.load()
 ---
 function M.setup(opts) vim.g.backlog_configuration = opts end
 
--- TODO: (you) - Change this file to whatever you need. These are just examples
+--- Open sidebar with tasks of specified project, or with all if project is nil.
+---
+---@param project string? project id to filter tasks
+function M.open_sidebar(project) open_cmd.run(project) end
 
---- Print the `names`.
----
----@param names string[]? Some text to print out. e.g. `{"a", "b", "c"}`.
----
-function M.run_arbitrary_thing(names) arbitrary_thing_runner.run(names) end
+--- Close tasks sidebar.
+function M.close_sidebar() close_cmd.run() end
 
---- Copy the log data from the given `path` to the user's clipboard.
----
----@param path string?
----    A path on-disk to look for logs. If none is given, the default fallback
----    location is used instead.
----
-function M.run_copy_logs(path) copy_logs_runner.run(path) end
-
---- Print `phrase` according to the other options.
----
----@param phrase string[]
----    The text to say.
----@param repeat_ number?
----    A 1-or-more value. The number of times to print `word`.
----@param style string?
----    Control how the text should be shown.
----
-function M.run_hello_world_say_phrase(phrase, repeat_, style) say_runner.run_say_phrase(phrase, repeat_, style) end
-
---- Print `phrase` according to the other options.
----
----@param word string
----    The text to say.
----@param repeat_ number?
----    A 1-or-more value. The number of times to print `word`.
----@param style string?
----    Control how the text should be shown.
----
-function M.run_hello_world_say_word(word, repeat_, style) say_runner.run_say_word(word, repeat_, style) end
-
---- Count a sheep for each `count`.
----
----@param count number Prints 1 sheep per `count`. A value that is 1-or-greater.
----
-function M.run_goodnight_moon_count_sheep(count) count_sheep.run(count) end
-
---- Print the name of the book.
----
----@param book string The name of the book.
----
-function M.run_goodnight_moon_read(book) read.run(book) end
-
---- Print Zzz each `count`.
----
----@param count number? Prints 1 Zzz per `count`. A value that is 1-or-greater.
----
-function M.run_goodnight_moon_sleep(count) sleep.run(count) end
+-- TODO: expose project add, edit, delete
+-- TODO: expose task add, edit, delete
 
 return M
