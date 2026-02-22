@@ -41,19 +41,13 @@ end
 ---    then we stop waiting for all of the functions to call.
 ---
 local function _wait_for_picker_to_initialize(timeout)
-    if timeout == nil then
-        timeout = 1000
-    end
+    if timeout == nil then timeout = 1000 end
 
     local initialized = false
 
-    vim.schedule(function()
-        initialized = true
-    end)
+    vim.schedule(function() initialized = true end)
 
-    vim.wait(timeout, function()
-        return initialized
-    end)
+    vim.wait(timeout, function() return initialized end)
 end
 
 --- Wait for our (mocked) unittest variable to get some data back.
@@ -63,13 +57,9 @@ end
 ---    then we stop waiting for all of the functions to call.
 ---
 local function _wait_for_result(timeout)
-    if timeout == nil then
-        timeout = 1000
-    end
+    if timeout == nil then timeout = 1000 end
 
-    vim.wait(timeout, function()
-        return _RESULT ~= nil
-    end)
+    vim.wait(timeout, function() return _RESULT ~= nil end)
 end
 
 --- Create a Telescope picker for `command` and get the created "prompt" buffer back.

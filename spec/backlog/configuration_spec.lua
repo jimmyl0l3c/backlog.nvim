@@ -32,9 +32,7 @@ local function _assert_good(data)
     data = configuration_.resolve_data(data)
     local issues = health.get_issues(data)
 
-    if vim.tbl_isempty(issues) then
-        return
-    end
+    if vim.tbl_isempty(issues) then return end
 
     error(
         string.format(
@@ -51,82 +49,109 @@ describe("default", function()
         _assert_good()
     end)
 
-    it("works with a fully defined, custom configuration", function()
-        _assert_good({
-            commands = {
-                goodnight_moon = {
-                    read = { phrase = "The Origin of Consciousness in the Breakdown of the Bicameral Mind" },
+    it(
+        "works with a fully defined, custom configuration",
+        function()
+            _assert_good({
+                commands = {
+                    goodnight_moon = {
+                        read = { phrase = "The Origin of Consciousness in the Breakdown of the Bicameral Mind" },
+                    },
+                    hello_world = { say = { ["repeat"] = 12, style = "uppercase" } },
                 },
-                hello_world = { say = { ["repeat"] = 12, style = "uppercase" } },
-            },
-        })
-    end)
+            })
+        end
+    )
 
-    it("works with the default configuration", function()
-        _assert_good({
-            commands = {
-                goodnight_moon = { phrase = "A good book" },
-                hello_world = { say = { ["repeat"] = 1, style = "lowercase" } },
-            },
-        })
-    end)
+    it(
+        "works with the default configuration",
+        function()
+            _assert_good({
+                commands = {
+                    goodnight_moon = { phrase = "A good book" },
+                    hello_world = { say = { ["repeat"] = 1, style = "lowercase" } },
+                },
+            })
+        end
+    )
 
-    it("works with the partially-defined configuration", function()
-        _assert_good({
-            commands = {
-                goodnight_moon = {},
-                hello_world = {},
-            },
-        })
-    end)
+    it(
+        "works with the partially-defined configuration",
+        function()
+            _assert_good({
+                commands = {
+                    goodnight_moon = {},
+                    hello_world = {},
+                },
+            })
+        end
+    )
 end)
 
 ---@diagnostic disable: assign-type-mismatch
 ---@diagnostic disable: missing-fields
 describe("bad configuration - commands", function()
-    it("happens with a bad type for #commands.goodnight_moon.phrase", function()
-        _assert_bad(
-            { commands = { goodnight_moon = { read = { phrase = 10 } } } },
-            { "commands.goodnight_moon.read.phrase: expected string, got number" }
-        )
-    end)
+    it(
+        "happens with a bad type for #commands.goodnight_moon.phrase",
+        function()
+            _assert_bad(
+                { commands = { goodnight_moon = { read = { phrase = 10 } } } },
+                { "commands.goodnight_moon.read.phrase: expected string, got number" }
+            )
+        end
+    )
 
-    it("happens with a bad type for #commands.hello_world.say.repeat", function()
-        _assert_bad(
-            { commands = { hello_world = { say = { ["repeat"] = "foo" } } } },
-            { "commands.hello_world.say.repeat: expected a number (value must be 1-or-more), got foo" }
-        )
-    end)
+    it(
+        "happens with a bad type for #commands.hello_world.say.repeat",
+        function()
+            _assert_bad(
+                { commands = { hello_world = { say = { ["repeat"] = "foo" } } } },
+                { "commands.hello_world.say.repeat: expected a number (value must be 1-or-more), got foo" }
+            )
+        end
+    )
 
-    it("happens with a bad value for #commands.hello_world.say.repeat", function()
-        _assert_bad(
-            { commands = { hello_world = { say = { ["repeat"] = -1 } } } },
-            { "commands.hello_world.say.repeat: expected a number (value must be 1-or-more), got -1" }
-        )
-    end)
+    it(
+        "happens with a bad value for #commands.hello_world.say.repeat",
+        function()
+            _assert_bad(
+                { commands = { hello_world = { say = { ["repeat"] = -1 } } } },
+                { "commands.hello_world.say.repeat: expected a number (value must be 1-or-more), got -1" }
+            )
+        end
+    )
 
-    it("happens with a bad type for #commands.hello_world.say.style", function()
-        _assert_bad(
-            { commands = { hello_world = { say = { style = 123 } } } },
-            { 'commands.hello_world.say.style: expected "lowercase" or "uppercase", got 123' }
-        )
-    end)
+    it(
+        "happens with a bad type for #commands.hello_world.say.style",
+        function()
+            _assert_bad(
+                { commands = { hello_world = { say = { style = 123 } } } },
+                { 'commands.hello_world.say.style: expected "lowercase" or "uppercase", got 123' }
+            )
+        end
+    )
 
-    it("happens with a bad value for #commands.hello_world.say.style", function()
-        _assert_bad(
-            { commands = { hello_world = { say = { style = "bad_value" } } } },
-            { 'commands.hello_world.say.style: expected "lowercase" or "uppercase", got bad_value' }
-        )
-    end)
+    it(
+        "happens with a bad value for #commands.hello_world.say.style",
+        function()
+            _assert_bad(
+                { commands = { hello_world = { say = { style = "bad_value" } } } },
+                { 'commands.hello_world.say.style: expected "lowercase" or "uppercase", got bad_value' }
+            )
+        end
+    )
 end)
 ---@diagnostic enable: assign-type-mismatch
 ---@diagnostic enable: missing-fields
 
 ---@diagnostic disable: assign-type-mismatch
 describe("bad configuration - logging", function()
-    it("happens with a bad value for #logging", function()
-        _assert_bad({ logging = false }, { 'logging: expected a table. e.g. { level = "info", ... }, got false' })
-    end)
+    it(
+        "happens with a bad value for #logging",
+        function()
+            _assert_bad({ logging = false }, { 'logging: expected a table. e.g. { level = "info", ... }, got false' })
+        end
+    )
 
     it("happens with a bad value for #logging.level", function()
         _assert_bad({ logging = { level = false } }, {
@@ -140,21 +165,23 @@ describe("bad configuration - logging", function()
         })
     end)
 
-    it("happens with a bad value for #logging.use_console", function()
-        _assert_bad({ logging = { use_console = "aaa" } }, { "logging.use_console: expected a boolean, got aaa" })
-    end)
+    it(
+        "happens with a bad value for #logging.use_console",
+        function()
+            _assert_bad({ logging = { use_console = "aaa" } }, { "logging.use_console: expected a boolean, got aaa" })
+        end
+    )
 
-    it("happens with a bad value for #logging.use_file", function()
-        _assert_bad({ logging = { use_file = "aaa" } }, { "logging.use_file: expected a boolean, got aaa" })
-    end)
+    it(
+        "happens with a bad value for #logging.use_file",
+        function() _assert_bad({ logging = { use_file = "aaa" } }, { "logging.use_file: expected a boolean, got aaa" }) end
+    )
 end)
 ---@diagnostic enable: assign-type-mismatch
 
 ---@diagnostic disable: assign-type-mismatch
 describe("health.check", function()
-    before_each(function()
-        mock_vim.mock_vim_health()
-    end)
+    before_each(function() mock_vim.mock_vim_health() end)
     after_each(mock_vim.reset_mocked_vim_health)
 
     it("works with an empty configuration", function()

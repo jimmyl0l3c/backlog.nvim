@@ -27,9 +27,7 @@ for url, directory in pairs(_PLUGINS) do
     vim.opt.rtp:append(directory)
 end
 
-if cloned then
-    print("Finished cloning.")
-end
+if cloned then print("Finished cloning.") end
 
 vim.opt.rtp:append(".")
 

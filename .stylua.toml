@@ -1,2 +1,9 @@
 indent_type = "Spaces"
-no_call_parentheses = false
+call_parentheses = "Always"
+column_width = 120
+indent_width = 4
+syntax = "Lua51"
+collapse_simple_statement = "Always"
+
+[sort_requires]
+enabled = false

@@ -6,15 +6,11 @@ local _ERROR_MESSAGES = {}
 local _ORIGINAL_HEALTH_ERROR = vim.health.error
 
 ---@return string[] # Get all saved vim.health.error calls.
-function M.get_vim_health_errors()
-    return _ERROR_MESSAGES
-end
+function M.get_vim_health_errors() return _ERROR_MESSAGES end
 
 --- Temporarily track vim.health calls.
 function M.mock_vim_health()
-    local function _save_health_error_message(message)
-        table.insert(_ERROR_MESSAGES, message)
-    end
+    local function _save_health_error_message(message) table.insert(_ERROR_MESSAGES, message) end
 
     vim.health.error = _save_health_error_message
 end

@@ -9,16 +9,12 @@ local _CURRENT_DIRECTORY = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand("<sfi
 
 local _PREVIOUS_RUN = vim.fs.joinpath(_CURRENT_DIRECTORY, "luacov.stats.out")
 
-if vim.fn.filereadable(_PREVIOUS_RUN) then
-    os.remove(_PREVIOUS_RUN)
-end
+if vim.fn.filereadable(_PREVIOUS_RUN) then os.remove(_PREVIOUS_RUN) end
 
 -- NOTE: LuaJIT is great but may interfere with coverage statistics
 -- so we need to turn it off.
 --
-if jit then
-    jit.off()
-end
+if jit then jit.off() end
 
 dofile("spec/minimal_init.lua")
 

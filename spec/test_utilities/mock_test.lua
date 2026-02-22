@@ -9,14 +9,10 @@ local _DATA = nil
 ---
 ---@param data any The passed value(s).
 ---
-local function _set_inspection_data(data)
-    _DATA = data
-end
+local function _set_inspection_data(data) _DATA = data end
 
 ---@return any # Get all saved vim.inspect calls.
-function M.get_inspection_data()
-    return _DATA
-end
+function M.get_inspection_data() return _DATA end
 
 --- Temporarily track vim.inspect calls.
 function M.mock_vim_inspect()
@@ -25,9 +21,7 @@ function M.mock_vim_inspect()
 end
 
 --- Restore the previous vim.inspect function.
-function M.reset_mocked_vim_inspect()
-    vim.inspect = _ORIGINAL_INSPECT
-end
+function M.reset_mocked_vim_inspect() vim.inspect = _ORIGINAL_INSPECT end
 
 --- Make it so no existing API calls or commands print text.
 function M.silence_all_internal_prints()

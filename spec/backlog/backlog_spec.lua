@@ -22,20 +22,14 @@ local _ORIGINAL_NOTIFY = vim.notify
 ---
 ---@param data string Some text to print to stdout.
 ---
-local function _save_prints(data)
-    table.insert(_DATA, data)
-end
+local function _save_prints(data) table.insert(_DATA, data) end
 
 --- Mock all functions / states before a unittest runs (call this before each test).
-local function _initialize_prints()
-    vim.notify = _save_prints
-end
+local function _initialize_prints() vim.notify = _save_prints end
 
 --- Watch the `copy-logs` API command for function calls.
 local function _initialize_copy_log()
-    local function _save_path(path)
-        _DATA = { path }
-    end
+    local function _save_path(path) _DATA = { path } end
 
     _CONFIGURATION_DATA = vim.deepcopy(configuration.DATA)
     copy_logs_runner._read_file = _save_path
@@ -50,9 +44,7 @@ local function _make_fake_log(path)
 
     local file = io.open(path, "w") -- Open the file in write mode
 
-    if not file then
-        error(string.format('Path "%s" is not writable.', path))
-    end
+    if not file then error(string.format('Path "%s" is not writable.', path)) end
 
     file:write("aaa\nbbb\nccc\n")
     file:close()
@@ -79,13 +71,9 @@ end
 ---    then we stop waiting for all of the functions to call.
 ---
 local function _wait_for_result(timeout)
-    if timeout == nil then
-        timeout = 1000
-    end
+    if timeout == nil then timeout = 1000 end
 
-    vim.wait(timeout, function()
-        return not vim.tbl_isempty(_DATA)
-    end)
+    vim.wait(timeout, function() return not vim.tbl_isempty(_DATA) end)
 end
 
 describe("arbitrary-thing API", function()

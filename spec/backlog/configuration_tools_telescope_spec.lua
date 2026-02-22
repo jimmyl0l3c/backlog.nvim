@@ -29,9 +29,7 @@ local function _assert_good(data)
     data = configuration_.resolve_data(data)
     local issues = health.get_issues(data)
 
-    if vim.tbl_isempty(issues) then
-        return
-    end
+    if vim.tbl_isempty(issues) then return end
 
     error(
         string.format(
@@ -43,19 +41,25 @@ local function _assert_good(data)
 end
 
 describe("bad configuration - #tools.telescope", function()
-    it("happens with a bad type for #tools.telescope", function()
-        _assert_bad(
-            { tools = { telescope = true } },
-            { "tools.telescope: expected a table. e.g. { goodnight_moon = {...}, hello_world = {...}}, got true" }
-        )
-    end)
+    it(
+        "happens with a bad type for #tools.telescope",
+        function()
+            _assert_bad(
+                { tools = { telescope = true } },
+                { "tools.telescope: expected a table. e.g. { goodnight_moon = {...}, hello_world = {...}}, got true" }
+            )
+        end
+    )
 
-    it("happens with a bad type for #tools.telescope.goodnight_moon", function()
-        _assert_bad(
-            { tools = { telescope = { goodnight_moon = true } } },
-            { 'tools.telescope.goodnight_moon: expected a table. e.g. { {"Book", "Author"} }, got true' }
-        )
-    end)
+    it(
+        "happens with a bad type for #tools.telescope.goodnight_moon",
+        function()
+            _assert_bad(
+                { tools = { telescope = { goodnight_moon = true } } },
+                { 'tools.telescope.goodnight_moon: expected a table. e.g. { {"Book", "Author"} }, got true' }
+            )
+        end
+    )
 
     it("happens with a bad value for #tools.telescope.goodnight_moon", function()
         local data =
@@ -70,12 +74,15 @@ describe("bad configuration - #tools.telescope", function()
         )
     end)
 
-    it("happens with a bad type for #tools.telescope.hello_world", function()
-        _assert_bad(
-            { tools = { telescope = { hello_world = true } } },
-            { 'tools.telescope.hello_world: expected a table. e.g. { "Hello", "Hi", ...} }, got true' }
-        )
-    end)
+    it(
+        "happens with a bad type for #tools.telescope.hello_world",
+        function()
+            _assert_bad(
+                { tools = { telescope = { hello_world = true } } },
+                { 'tools.telescope.hello_world: expected a table. e.g. { "Hello", "Hi", ...} }, got true' }
+            )
+        end
+    )
 
     it("happens with a bad value for #tools.telescope.hello_world", function()
         local data = configuration_.resolve_data({ tools = { telescope = { hello_world = { true } } } })
@@ -91,23 +98,25 @@ describe("bad configuration - #tools.telescope", function()
 end)
 
 describe("good configuration - #tools.telescope", function()
-    it("works with a default #tools.telescope", function()
-        _assert_good({ tools = { telescope = {} } })
-    end)
+    it("works with a default #tools.telescope", function() _assert_good({ tools = { telescope = {} } }) end)
 
-    it("works with an empty #tools.telescope.goodnight_moon", function()
-        _assert_good({ tools = { telescope = { goodnight_moon = {} } } })
-    end)
+    it(
+        "works with an empty #tools.telescope.goodnight_moon",
+        function() _assert_good({ tools = { telescope = { goodnight_moon = {} } } }) end
+    )
 
-    it("works with a valid #tools.telescope.goodnight_moon", function()
-        _assert_good({ tools = { telescope = { goodnight_moon = { { "Foo", "Bar" } } } } })
-    end)
+    it(
+        "works with a valid #tools.telescope.goodnight_moon",
+        function() _assert_good({ tools = { telescope = { goodnight_moon = { { "Foo", "Bar" } } } } }) end
+    )
 
-    it("works with an empty #tools.telescope.hello_world", function()
-        _assert_good({ tools = { telescope = { hello_world = {} } } })
-    end)
+    it(
+        "works with an empty #tools.telescope.hello_world",
+        function() _assert_good({ tools = { telescope = { hello_world = {} } } }) end
+    )
 
-    it("works with a valid #tools.telescope.hello_world", function()
-        _assert_good({ tools = { telescope = { hello_world = { "Foo", "Bar" } } } })
-    end)
+    it(
+        "works with a valid #tools.telescope.hello_world",
+        function() _assert_good({ tools = { telescope = { hello_world = { "Foo", "Bar" } } } }) end
+    )
 end)

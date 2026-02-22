@@ -70,9 +70,7 @@ function M:init(options)
     --- @type table<string, backlog.LualineDisplayData>
     local data
 
-    if options then
-        data = options.display or {}
-    end
+    if options then data = options.display or {} end
 
     local defaults = tabler.get_value(configuration.DATA, { "tools", "lualine" }) or {}
     defaults = vim.tbl_deep_extend("force", defaults, data)
@@ -116,22 +114,16 @@ end
 function M:update_status()
     local command = M.PREVIOUS_COMMAND
 
-    if not command then
-        return nil
-    end
+    if not command then return nil end
 
     local text = self._command_text[command]
     local color = self._highlight_groups[M.PREVIOUS_COMMAND]
 
-    if not color then
-        return text
-    end
+    if not color then return text end
 
     local prefix = modules.highlight.component_format_highlight(color)
 
-    if not prefix then
-        return text
-    end
+    if not prefix then return text end
 
     return prefix .. text
 end

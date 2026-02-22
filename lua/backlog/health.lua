@@ -33,9 +33,7 @@ local function _has_extra_color_keys(value)
     local keys = { "bg", "fg", "gui" }
 
     for key, _ in pairs(value) do
-        if not vim.tbl_contains(keys, key) then
-            return true
-        end
+        if not vim.tbl_contains(keys, key) then return true end
     end
 
     return false
@@ -47,9 +45,7 @@ end
 ---@return boolean # If `text` matches, return `true`.
 ---
 local function _is_hex_color(text)
-    if type(text) ~= "string" then
-        return false
-    end
+    if type(text) ~= "string" then return false end
 
     return text:match("^#%x%x%x%x%x%x$") ~= nil
 end
@@ -93,9 +89,7 @@ local function _append_validated(array, name, value_creator, expected, message)
         [name] = { value, expected, message },
     })
 
-    if not success then
-        table.insert(array, validated)
-    end
+    if not success then table.insert(array, validated) end
 end
 
 --- Check if `data` is a boolean under `key`.
@@ -125,9 +119,7 @@ local function _get_boolean_issue(key, data)
         },
     })
 
-    if success then
-        return nil
-    end
+    if success then return nil end
 
     return message
 end
@@ -140,23 +132,32 @@ end
 local function _get_command_issues(data)
     local output = {}
 
-    _append_validated(output, "commands.goodnight_moon.read.phrase", function()
-        return tabler.get_value(data, { "commands", "goodnight_moon", "read", "phrase" })
-    end, "string")
+    _append_validated(
+        output,
+        "commands.goodnight_moon.read.phrase",
+        function() return tabler.get_value(data, { "commands", "goodnight_moon", "read", "phrase" }) end,
+        "string"
+    )
 
-    _append_validated(output, "commands.hello_world.say.repeat", function()
-        return tabler.get_value(data, { "commands", "hello_world", "say", "repeat" })
-    end, function(value)
-        return type(value) == "number" and value > 0
-    end, "a number (value must be 1-or-more)")
+    _append_validated(
+        output,
+        "commands.hello_world.say.repeat",
+        function() return tabler.get_value(data, { "commands", "hello_world", "say", "repeat" }) end,
+        function(value) return type(value) == "number" and value > 0 end,
+        "a number (value must be 1-or-more)"
+    )
 
-    _append_validated(output, "commands.hello_world.say.style", function()
-        return tabler.get_value(data, { "commands", "hello_world", "say", "style" })
-    end, function(value)
-        local choices = vim.tbl_keys(say_constant.Keyword.style)
+    _append_validated(
+        output,
+        "commands.hello_world.say.style",
+        function() return tabler.get_value(data, { "commands", "hello_world", "say", "style" }) end,
+        function(value)
+            local choices = vim.tbl_keys(say_constant.Keyword.style)
 
-        return vim.tbl_contains(choices, value)
-    end, '"lowercase" or "uppercase"')
+            return vim.tbl_contains(choices, value)
+        end,
+        '"lowercase" or "uppercase"'
+    )
 
     return output
 end
@@ -174,71 +175,63 @@ end
 local function _get_lualine_command_issues(command, data)
     local output = {}
 
-    _append_validated(output, string.format("tools.lualine.%s", command), function()
-        return data
-    end, function(value)
-        if type(value) ~= "table" then
-            return false
-        end
+    _append_validated(output, string.format("tools.lualine.%s", command), function() return data end, function(value)
+        if type(value) ~= "table" then return false end
 
         return true
     end, 'a table. e.g. { text="some text here" }')
 
-    if not vim.tbl_isempty(output) then
-        return output
-    end
+    if not vim.tbl_isempty(output) then return output end
 
-    _append_validated(output, string.format("tools.lualine.%s.text", command), function()
-        return tabler.get_value(data, { "text" })
-    end, function(value)
-        if type(value) ~= "string" then
+    _append_validated(
+        output,
+        string.format("tools.lualine.%s.text", command),
+        function() return tabler.get_value(data, { "text" }) end,
+        function(value)
+            if type(value) ~= "string" then return false end
+
+            return true
+        end,
+        'a string. e.g. "some text here"'
+    )
+
+    _append_validated(
+        output,
+        string.format("tools.lualine.%s.color", command),
+        function() return tabler.get_value(data, { "color" }) end,
+        function(value)
+            if value == nil then
+                -- NOTE: It's okay for this value to be undefined because
+                -- we define a fallback for the user.
+                --
+                return true
+            end
+
+            local type_ = type(value)
+
+            if type_ == "string" then
+                -- NOTE: We assume that there is a linkable highlight group
+                -- with the name of `value` already or one that will exist.
+                --
+                return true
+            end
+
+            if type_ == "table" then
+                if value.bg ~= nil and not _is_hex_color(value.bg) then return false end
+
+                if value.fg ~= nil and not _is_hex_color(value.fg) then return false end
+
+                if value.gui ~= nil and type(value.gui) ~= "string" then return false end
+
+                if _has_extra_color_keys(value) then return false end
+
+                return true
+            end
+
             return false
-        end
-
-        return true
-    end, 'a string. e.g. "some text here"')
-
-    _append_validated(output, string.format("tools.lualine.%s.color", command), function()
-        return tabler.get_value(data, { "color" })
-    end, function(value)
-        if value == nil then
-            -- NOTE: It's okay for this value to be undefined because
-            -- we define a fallback for the user.
-            --
-            return true
-        end
-
-        local type_ = type(value)
-
-        if type_ == "string" then
-            -- NOTE: We assume that there is a linkable highlight group
-            -- with the name of `value` already or one that will exist.
-            --
-            return true
-        end
-
-        if type_ == "table" then
-            if value.bg ~= nil and not _is_hex_color(value.bg) then
-                return false
-            end
-
-            if value.fg ~= nil and not _is_hex_color(value.fg) then
-                return false
-            end
-
-            if value.gui ~= nil and type(value.gui) ~= "string" then
-                return false
-            end
-
-            if _has_extra_color_keys(value) then
-                return false
-            end
-
-            return true
-        end
-
-        return false
-    end, 'a table. e.g. {fg="#000000", bg="#FFFFFF", gui="effect"}')
+        end,
+        'a table. e.g. {fg="#000000", bg="#FFFFFF", gui="effect"}'
+    )
 
     return output
 end
@@ -253,19 +246,13 @@ local function _get_lualine_issues(data)
 
     local lualine = tabler.get_value(data, { "tools", "lualine" })
 
-    _append_validated(output, "tools.lualine", function()
-        return lualine
-    end, function(value)
-        if type(value) ~= "table" then
-            return false
-        end
+    _append_validated(output, "tools.lualine", function() return lualine end, function(value)
+        if type(value) ~= "table" then return false end
 
         return true
     end, "a table. e.g. { goodnight_moon = {...}, hello_world = {...} }")
 
-    if not vim.tbl_isempty(output) then
-        return output
-    end
+    if not vim.tbl_isempty(output) then return output end
 
     for _, command in ipairs({ "arbitrary_thing", "goodnight_moon", "hello_world" }) do
         local value = tabler.get_value(lualine, { command })
@@ -289,45 +276,29 @@ end
 local function _get_logging_issues(data)
     local output = {}
 
-    _append_validated(output, "logging", function()
-        return data
-    end, function(value)
-        if type(value) ~= "table" then
-            return false
-        end
+    _append_validated(output, "logging", function() return data end, function(value)
+        if type(value) ~= "table" then return false end
 
         return true
     end, 'a table. e.g. { level = "info", ... }')
 
-    if not vim.tbl_isempty(output) then
-        return output
-    end
+    if not vim.tbl_isempty(output) then return output end
 
-    _append_validated(output, "logging.level", function()
-        return data.level
-    end, function(value)
-        if type(value) ~= "string" then
-            return false
-        end
+    _append_validated(output, "logging.level", function() return data.level end, function(value)
+        if type(value) ~= "string" then return false end
 
-        if not vim.tbl_contains({ "trace", "debug", "info", "warn", "error", "fatal" }, value) then
-            return false
-        end
+        if not vim.tbl_contains({ "trace", "debug", "info", "warn", "error", "fatal" }, value) then return false end
 
         return true
     end, 'an enum. e.g. "trace" | "debug" | "info" | "warn" | "error" | "fatal"')
 
     local message = _get_boolean_issue("logging.use_console", data.use_console)
 
-    if message ~= nil then
-        table.insert(output, message)
-    end
+    if message ~= nil then table.insert(output, message) end
 
     message = _get_boolean_issue("logging.use_file", data.use_file)
 
-    if message ~= nil then
-        table.insert(output, message)
-    end
+    if message ~= nil then table.insert(output, message) end
 
     return output
 end
@@ -342,57 +313,47 @@ local function _get_telescope_issues(data)
 
     local telescope = tabler.get_value(data, { "tools", "telescope" })
 
-    _append_validated(output, "tools.telescope", function()
-        return telescope
-    end, function(value)
-        if type(value) ~= "table" then
-            return false
-        end
+    _append_validated(output, "tools.telescope", function() return telescope end, function(value)
+        if type(value) ~= "table" then return false end
 
         return true
     end, "a table. e.g. { goodnight_moon = {...}, hello_world = {...}}")
 
-    if not vim.tbl_isempty(output) then
-        return output
-    end
+    if not vim.tbl_isempty(output) then return output end
 
-    _append_validated(output, "tools.telescope.goodnight_moon", function()
-        return telescope.goodnight_moon
-    end, function(value)
-        if value == nil then
-            return true
-        end
+    _append_validated(
+        output,
+        "tools.telescope.goodnight_moon",
+        function() return telescope.goodnight_moon end,
+        function(value)
+            if value == nil then return true end
 
-        if type(value) ~= "table" then
-            return false
-        end
+            if type(value) ~= "table" then return false end
 
-        for _, item in ipairs(value) do
-            if not texter.is_string_list(item) then
-                return false
+            for _, item in ipairs(value) do
+                if not texter.is_string_list(item) then return false end
+
+                if #item ~= 2 then return false end
             end
 
-            if #item ~= 2 then
-                return false
-            end
-        end
-
-        return true
-    end, 'a table. e.g. { {"Book", "Author"} }')
-
-    _append_validated(output, "tools.telescope.hello_world", function()
-        return telescope.hello_world
-    end, function(value)
-        if value == nil then
             return true
-        end
+        end,
+        'a table. e.g. { {"Book", "Author"} }'
+    )
 
-        if type(value) ~= "table" then
-            return false
-        end
+    _append_validated(
+        output,
+        "tools.telescope.hello_world",
+        function() return telescope.hello_world end,
+        function(value)
+            if value == nil then return true end
 
-        return texter.is_string_list(value)
-    end, 'a table. e.g. { "Hello", "Hi", ...} }')
+            if type(value) ~= "table" then return false end
+
+            return texter.is_string_list(value)
+        end,
+        'a table. e.g. { "Hello", "Hi", ...} }'
+    )
 
     return output
 end
@@ -403,30 +364,22 @@ end
 ---@return string[] # All found issues, if any.
 ---
 function M.get_issues(data)
-    if not data or vim.tbl_isempty(data) then
-        data = configuration_.resolve_data(vim.g.backlog_configuration)
-    end
+    if not data or vim.tbl_isempty(data) then data = configuration_.resolve_data(vim.g.backlog_configuration) end
 
     local output = {}
     vim.list_extend(output, _get_command_issues(data))
 
     local logging = data.logging
 
-    if logging ~= nil then
-        vim.list_extend(output, _get_logging_issues(data.logging))
-    end
+    if logging ~= nil then vim.list_extend(output, _get_logging_issues(data.logging)) end
 
     local lualine = tabler.get_value(data, { "tools", "lualine" })
 
-    if lualine ~= nil then
-        vim.list_extend(output, _get_lualine_issues(data))
-    end
+    if lualine ~= nil then vim.list_extend(output, _get_lualine_issues(data)) end
 
     local telescope = tabler.get_value(data, { "tools", "telescope" })
 
-    if telescope ~= nil then
-        vim.list_extend(output, _get_telescope_issues(data))
-    end
+    if telescope ~= nil then vim.list_extend(output, _get_telescope_issues(data)) end
 
     return output
 end
@@ -442,9 +395,7 @@ function M.check(data)
 
     local issues = M.get_issues(data)
 
-    if vim.tbl_isempty(issues) then
-        vim.health.ok("Your vim.g.backlog_configuration variable is great!")
-    end
+    if vim.tbl_isempty(issues) then vim.health.ok("Your vim.g.backlog_configuration variable is great!") end
 
     for _, issue in ipairs(issues) do
         vim.health.error(issue)

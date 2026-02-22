@@ -7,9 +7,7 @@ local mock_test = require("test_utilities.mock_test")
 local backlog = require("backlog")
 
 ---@return table # The generated Lualine component.
-local function _make_component()
-    return lualine_backlog({ self = { section = "y" } })
-end
+local function _make_component() return lualine_backlog({ self = { section = "y" } }) end
 
 --- Delete all existing highlight groups and recreate them (so we can keep tests clean).
 local function _refresh_highlight_groups()

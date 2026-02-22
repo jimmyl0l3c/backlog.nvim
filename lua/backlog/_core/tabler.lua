@@ -42,9 +42,7 @@ function M.get_value(data, items)
         local item = items[index]
         current = current[item]
 
-        if current == nil then
-            return nil
-        end
+        if current == nil then return nil end
 
         table.insert(found, item)
 

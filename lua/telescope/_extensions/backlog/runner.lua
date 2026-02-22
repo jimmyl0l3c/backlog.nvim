@@ -111,9 +111,7 @@ function M.get_hello_world_picker(options)
             results = phrases,
             entry_maker = function(data)
                 return {
-                    display = function(entry)
-                        return displayer({ entry.value })
-                    end,
+                    display = function(entry) return displayer({ entry.value }) end,
                     name = data,
                     value = data,
                     ordinal = data,
@@ -144,19 +142,13 @@ end
 function M.get_selection(buffer)
     local books = {}
 
-    action_utils.map_selections(buffer, function(selection)
-        table.insert(books, selection.value)
-    end)
+    action_utils.map_selections(buffer, function(selection) table.insert(books, selection.value) end)
 
-    if not vim.tbl_isempty(books) then
-        return books
-    end
+    if not vim.tbl_isempty(books) then return books end
 
     local selection = action_state.get_selected_entry()
 
-    if selection ~= nil then
-        return { selection.value }
-    end
+    if selection ~= nil then return { selection.value } end
 
     return {}
 end

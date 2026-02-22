@@ -31,9 +31,7 @@ local function _assert_good(data)
     data = configuration_.resolve_data(data)
     local issues = health.get_issues(data)
 
-    if vim.tbl_isempty(issues) then
-        return
-    end
+    if vim.tbl_isempty(issues) then return end
 
     error(
         string.format(
@@ -45,12 +43,15 @@ local function _assert_good(data)
 end
 
 describe("bad configuration - tools.lualine", function()
-    it("happens with a bad value for #tools.lualine.goodnight_moon", function()
-        _assert_bad(
-            { tools = { lualine = { goodnight_moon = true } } },
-            { 'tools.lualine.goodnight_moon: expected a table. e.g. { text="some text here" }, got true' }
-        )
-    end)
+    it(
+        "happens with a bad value for #tools.lualine.goodnight_moon",
+        function()
+            _assert_bad(
+                { tools = { lualine = { goodnight_moon = true } } },
+                { 'tools.lualine.goodnight_moon: expected a table. e.g. { text="some text here" }, got true' }
+            )
+        end
+    )
 
     it("happens with a bad value for #tools.lualine.goodnight_moon.color", function()
         local data = configuration_.resolve_data({ tools = { lualine = { goodnight_moon = { color = false } } } })
@@ -145,12 +146,15 @@ describe("bad configuration - tools.lualine", function()
         )
     end)
 
-    it("happens with a bad value for #tools.lualine.hello_world", function()
-        _assert_bad(
-            { tools = { lualine = { hello_world = true } } },
-            { 'tools.lualine.hello_world: expected a table. e.g. { text="some text here" }, got true' }
-        )
-    end)
+    it(
+        "happens with a bad value for #tools.lualine.hello_world",
+        function()
+            _assert_bad(
+                { tools = { lualine = { hello_world = true } } },
+                { 'tools.lualine.hello_world: expected a table. e.g. { text="some text here" }, got true' }
+            )
+        end
+    )
 
     it("happens with a bad value for #tools.lualine.hello_world.color - 001", function()
         local data = configuration_.resolve_data({ tools = { lualine = { hello_world = { color = false } } } })
@@ -243,25 +247,31 @@ describe("bad configuration - tools.lualine", function()
         )
     end)
 
-    it("happens with a bad value for #tools.lualine", function()
-        _assert_bad(
-            { tools = { lualine = false } },
-            { "tools.lualine: expected a table. e.g. { goodnight_moon = {...}, hello_world = {...} }, got false" }
-        )
-    end)
+    it(
+        "happens with a bad value for #tools.lualine",
+        function()
+            _assert_bad(
+                { tools = { lualine = false } },
+                { "tools.lualine: expected a table. e.g. { goodnight_moon = {...}, hello_world = {...} }, got false" }
+            )
+        end
+    )
 end)
 
 describe("good configuration - tools.lualine", function()
-    it("example good values", function()
-        _assert_good({
-            tools = {
-                lualine = {
-                    goodnight_moon = { text = "ttt" },
-                    hello_world = { text = "yyyy" },
+    it(
+        "example good values",
+        function()
+            _assert_good({
+                tools = {
+                    lualine = {
+                        goodnight_moon = { text = "ttt" },
+                        hello_world = { text = "yyyy" },
+                    },
                 },
-            },
-        })
-    end)
+            })
+        end
+    )
 
     it("happens with a bad value for #tools.lualine.goodnight_moon.color", function()
         local data = configuration_.resolve_data({ tools = { lualine = { goodnight_moon = { color = false } } } })
@@ -292,12 +302,15 @@ describe("good configuration - tools.lualine", function()
         )
     end)
 
-    it("happens with a bad value for #tools.lualine.hello_world", function()
-        _assert_bad(
-            { tools = { lualine = { hello_world = true } } },
-            { 'tools.lualine.hello_world: expected a table. e.g. { text="some text here" }, got true' }
-        )
-    end)
+    it(
+        "happens with a bad value for #tools.lualine.hello_world",
+        function()
+            _assert_bad(
+                { tools = { lualine = { hello_world = true } } },
+                { 'tools.lualine.hello_world: expected a table. e.g. { text="some text here" }, got true' }
+            )
+        end
+    )
 
     it("happens with a bad value for #tools.lualine.hello_world.color", function()
         local data = configuration_.resolve_data({ tools = { lualine = { hello_world = { color = false } } } })
@@ -328,10 +341,13 @@ describe("good configuration - tools.lualine", function()
         )
     end)
 
-    it("happens with a bad value for #tools.lualine", function()
-        _assert_bad(
-            { tools = { lualine = false } },
-            { "tools.lualine: expected a table. e.g. { goodnight_moon = {...}, hello_world = {...} }, got false" }
-        )
-    end)
+    it(
+        "happens with a bad value for #tools.lualine",
+        function()
+            _assert_bad(
+                { tools = { lualine = false } },
+                { "tools.lualine: expected a table. e.g. { goodnight_moon = {...}, hello_world = {...} }, got false" }
+            )
+        end
+    )
 end)
