@@ -124,44 +124,6 @@ local function _get_boolean_issue(key, data)
     return message
 end
 
---- Check all "commands" values for issues.
----
----@param data backlog.Configuration All of the user's fallback settings.
----@return string[] # All found issues, if any.
----
-local function _get_command_issues(data)
-    local output = {}
-
-    _append_validated(
-        output,
-        "commands.goodnight_moon.read.phrase",
-        function() return tabler.get_value(data, { "commands", "goodnight_moon", "read", "phrase" }) end,
-        "string"
-    )
-
-    _append_validated(
-        output,
-        "commands.hello_world.say.repeat",
-        function() return tabler.get_value(data, { "commands", "hello_world", "say", "repeat" }) end,
-        function(value) return type(value) == "number" and value > 0 end,
-        "a number (value must be 1-or-more)"
-    )
-
-    _append_validated(
-        output,
-        "commands.hello_world.say.style",
-        function() return tabler.get_value(data, { "commands", "hello_world", "say", "style" }) end,
-        function(value)
-            local choices = vim.tbl_keys(say_constant.Keyword.style)
-
-            return vim.tbl_contains(choices, value)
-        end,
-        '"lowercase" or "uppercase"'
-    )
-
-    return output
-end
-
 --- Check the contents of the "tools.lualine" configuration for any issues.
 ---
 --- Issues include:
@@ -367,7 +329,6 @@ function M.get_issues(data)
     if not data or vim.tbl_isempty(data) then data = configuration_.resolve_data(vim.g.backlog_configuration) end
 
     local output = {}
-    vim.list_extend(output, _get_command_issues(data))
 
     local logging = data.logging
 

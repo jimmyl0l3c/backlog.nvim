@@ -30,7 +30,8 @@
 ---@field commands backlog.ConfigurationCommands? Customize the fallback behavior of all `:Backlog` commands.
 ---@field logging backlog.LoggingConfiguration? Control how and which logs print to file / Neovim.
 ---@field win_opts vim.api.keyset.win_config? Sidebar window config.
----@field states table<backlog.States, backlog.StateConfiguration>? Customize how tasks are displayed based on their state.
+---@field states table<backlog.States, backlog.StateConfiguration>?
+---    Customize how tasks are displayed based on their state.
 ---@field tools backlog.ConfigurationTools? Optional third-party tool integrations.
 
 ---@class backlog.StateConfiguration
