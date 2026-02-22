@@ -4,7 +4,12 @@ local states = require("backlog._core.states")
 
 local header_lines = 1
 
-local M = { cursor = 1, items = {}, project = nil }
+local M = {
+    cursor = 1,
+    items = {},
+    project = nil,
+    pending_del = {},
+}
 
 local function render(buf)
     vim.bo[buf].modifiable = true
@@ -74,7 +79,7 @@ end
 
 local function update_items(buf, project_id)
     local project = project_id and data.find_project(project_id) or nil
-    local items = project_id and data.tasks_for_project(project_id) or data.store.tasks
+    local items = project_id and data.tasks_for_project(project_id) or vim.deepcopy(data.store.tasks, false)
 
     M.project = project
     M.items = items
@@ -82,7 +87,10 @@ local function update_items(buf, project_id)
     render(buf or M.buf)
 end
 
-local function map(buf, key, fn) vim.keymap.set("n", key, fn, { buffer = buf, noremap = true, silent = true }) end
+local function map(buf, key, fn, opts)
+    opts = vim.tbl_extend("force", { buffer = buf, noremap = true, silent = true }, opts or {})
+    vim.keymap.set("n", key, fn, opts)
+end
 
 local function map_state(buf, key, state)
     map(buf, key, function()
@@ -94,7 +102,40 @@ local function map_state(buf, key, state)
             M.items[M.cursor] = updated
             render(buf)
         end
-    end)
+    end, nil)
+end
+
+_G.sidebar_delete = function(type)
+    if not M.items then return end
+
+    local start_row, end_row
+
+    if type == "line" then
+        start_row = vim.api.nvim_buf_get_mark(M.buf, "[")[1]
+        end_row = vim.api.nvim_buf_get_mark(M.buf, "]")[1]
+    elseif type == "char" then
+        start_row = M.cursor
+        end_row = M.cursor
+    end
+
+    local first = start_row - header_lines
+    local last = end_row - header_lines
+
+    first = math.max(1, first)
+    last = math.min(#M.items, last)
+
+    if first > last then return end
+
+    for _ = first, last do
+        table.insert(M.pending_del, M.items[first].id)
+        table.remove(M.items, first)
+    end
+
+    M.cursor = math.min(M.cursor, #M.items)
+    M.cursor = math.max(M.cursor, 1)
+
+    render(M.buf)
+    vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
 end
 
 local function setup_keymaps(buf)
@@ -102,13 +143,13 @@ local function setup_keymaps(buf)
         M.cursor = math.min(M.cursor + vim.v.count1, #M.items)
         render(buf)
         vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
-    end)
+    end, nil)
 
     map(buf, "k", function()
         M.cursor = math.max(M.cursor - vim.v.count1, 1)
         render(buf)
         vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
-    end)
+    end, nil)
 
     for state, keys in pairs(configuration.DATA.keys) do
         for _, key in ipairs(keys) do
@@ -123,9 +164,9 @@ local function setup_keymaps(buf)
             item.done_timestamp = item.state == states.Done and os.date("%Y-%m-%d") or ""
             render(buf)
         end
-    end)
+    end, nil)
 
-    map(buf, "q", M.close)
+    map(buf, "q", M.close, nil)
 
     map(buf, "a", function()
         vim.ui.input({ prompt = "Add task" }, function(input)
@@ -134,7 +175,7 @@ local function setup_keymaps(buf)
             data.add_task({ project = project_id, title = input })
             update_items(buf, project_id)
         end)
-    end)
+    end, nil)
 
     map(buf, "e", function()
         local item = M.items[M.cursor]
@@ -147,7 +188,27 @@ local function setup_keymaps(buf)
             M.items[M.cursor] = updated
             render(buf)
         end)
-    end)
+    end, nil)
+
+    map(buf, "d", function()
+        vim.opt.operatorfunc = "v:lua.sidebar_delete"
+        return "g@"
+    end, { expr = true })
+
+    map(buf, "dd", function()
+        vim.opt.operatorfunc = "v:lua.sidebar_delete"
+        return vim.v.count1 .. "g@_"
+    end, { expr = true })
+
+    map(buf, "dj", function()
+        vim.opt.operatorfunc = "v:lua.sidebar_delete"
+        return "g@j"
+    end, { expr = true })
+
+    map(buf, "dk", function()
+        vim.opt.operatorfunc = "v:lua.sidebar_delete"
+        return "g@k"
+    end, { expr = true })
 end
 
 local function setup_listeners(buf)
@@ -165,6 +226,14 @@ local function setup_listeners(buf)
     vim.api.nvim_create_autocmd("BufWriteCmd", {
         buffer = buf,
         callback = function()
+            for i = #M.pending_del, 1, -1 do
+                local id = M.pending_del[i]
+                if data.remove_task(id) then
+                    table.remove(M.pending_del, i)
+                else
+                    vim.notify("Could not delete task: " .. id, vim.log.levels.ERROR)
+                end
+            end
             data.save()
             vim.bo[buf].modified = false
         end,

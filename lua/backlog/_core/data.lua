@@ -134,6 +134,13 @@ function M.find_task(id)
     return nil
 end
 
+function M.remove_task(id)
+    local _, i = M.find_task(id)
+    if not i then return false end
+    table.remove(M.store.tasks, i)
+    return true
+end
+
 function M.add_comment(task_index, content)
     local task = M.store.tasks[task_index]
     if not task then
