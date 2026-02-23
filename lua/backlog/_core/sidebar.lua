@@ -159,9 +159,12 @@ local function setup_keymaps(buf)
 
     map(buf, "<CR>", function()
         local item = M.items[M.cursor]
-        if item then
-            item.state = item.state == states.Done and states.ToDo or states.Done
-            item.done_timestamp = item.state == states.Done and os.date("%Y-%m-%d") or ""
+        if not item then return end
+
+        local state = item.state == states.Done and states.ToDo or states.Done
+        local updated = data.set_task_state(item.id, state)
+        if updated then
+            M.items[M.cursor] = updated
             render(buf)
         end
     end, nil)

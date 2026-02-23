@@ -13,7 +13,7 @@ local close_cmd = require("backlog._commands.close.runner")
 local M = {}
 
 configuration.initialize_data_if_needed()
-data.load()
+data.init()
 
 --- Update plugin configuration.
 ---
