@@ -196,20 +196,14 @@ function M.add_comment(task_id, content)
 end
 
 --- Set tasks state (and done_timestamp if applicable).
----@param task_id string task id
+---@param task backlog.Task task to update
 ---@param state backlog.States state
----@return backlog.Task?
-function M.set_task_state(task_id, state)
-    local p, _ = M.find_task(task_id)
-    if not p then
-        vim.notify("backlog: task not found " .. task_id, vim.log.levels.ERROR)
-        return nil
-    end
-
-    p.state = state or states.ToDo
-    p.done_timestamp = (p.state == states.Done or p.state == states.Cancelled) and os.date("%Y-%m-%d") --[[@as string]]
+---@return backlog.Task
+function M.set_task_state(task, state)
+    task.state = state or states.ToDo
+    task.done_timestamp = (task.state == states.Done or task.state == states.Cancelled) and os.date("%Y-%m-%d") --[[@as string]]
         or ""
-    return p
+    return task
 end
 
 --- Edit task.
@@ -232,6 +226,26 @@ function M.edit_task(task_id, opts)
     p.comments = opts.comments or p.comments
 
     return p
+end
+
+--- Comparison function for strings that prefers non-empty strings.
+---@param a string
+---@param b string
+---@return boolean
+local function prioritize_nonempty(a, b)
+    if #a == 0 or #b == 0 then return a > b end
+    return a < b
+end
+
+--- Sort tasks in place.
+---@param items backlog.Task[]
+function M.sort_tasks(items)
+    table.sort(items, function(a, b)
+        if a.priority ~= b.priority then return a.priority > b.priority end
+        if a.ticket ~= b.ticket then return prioritize_nonempty(a.ticket, b.ticket) end
+        if a.project ~= b.project then return prioritize_nonempty(a.project, b.project) end
+        return a.title < b.title
+    end)
 end
 
 return M

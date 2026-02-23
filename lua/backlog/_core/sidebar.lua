@@ -11,6 +11,20 @@ local M = {
     pending_del = {},
 }
 
+--- Update cursor to select specified item, noop if item is not found.
+---@param item backlog.Task
+local function set_cursor(item)
+    if not M.items or not item then return end
+
+    for i, p in ipairs(M.items) do
+        if p.id == item.id then
+            M.cursor = i
+            vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
+            return
+        end
+    end
+end
+
 local function render(buf)
     vim.bo[buf].modifiable = true
 
@@ -79,7 +93,9 @@ end
 
 local function update_items(buf, project_id)
     local project = project_id and data.find_project(project_id) or nil
-    local items = project_id and data.tasks_for_project(project_id) or vim.deepcopy(data.store.tasks, false)
+    local items = project_id and data.tasks_for_project(project_id) or vim.tbl_extend("force", {}, data.store.tasks)
+
+    data.sort_tasks(items)
 
     M.project = project
     M.items = items
@@ -97,11 +113,8 @@ local function map_state(buf, key, state)
         local item = M.items[M.cursor]
         if not item then return end
 
-        local updated = data.set_task_state(item.id, state)
-        if updated then
-            M.items[M.cursor] = updated
-            render(buf)
-        end
+        data.set_task_state(item, state)
+        render(buf)
     end, nil)
 end
 
@@ -162,11 +175,8 @@ local function setup_keymaps(buf)
         if not item then return end
 
         local state = item.state == states.Done and states.ToDo or states.Done
-        local updated = data.set_task_state(item.id, state)
-        if updated then
-            M.items[M.cursor] = updated
-            render(buf)
-        end
+        data.set_task_state(item, state)
+        render(buf)
     end, nil)
 
     map(buf, "q", M.close, nil)
@@ -183,14 +193,32 @@ local function setup_keymaps(buf)
     map(buf, "e", function()
         local item = M.items[M.cursor]
         if not item then return end
+
         vim.ui.input({ prompt = "Edit task", default = item.title }, function(input)
             if not input or input == item.title then return end
-
-            local updated = data.edit_task(item.id, { title = input })
-            if not updated then return end
-            M.items[M.cursor] = updated
+            item.title = input
             render(buf)
         end)
+    end, nil)
+
+    map(buf, "+", function()
+        local item = M.items[M.cursor]
+        if not item then return end
+
+        item.priority = item.priority + vim.v.count1
+        data.sort_tasks(M.items)
+        set_cursor(item)
+        render(buf)
+    end, nil)
+
+    map(buf, "-", function()
+        local item = M.items[M.cursor]
+        if not item then return end
+
+        item.priority = item.priority - vim.v.count1
+        data.sort_tasks(M.items)
+        set_cursor(item)
+        render(buf)
     end, nil)
 
     map(buf, "t", function()
@@ -199,9 +227,7 @@ local function setup_keymaps(buf)
         vim.ui.input({ prompt = "Edit task's ticket", default = item.ticket or "" }, function(input)
             if not input or input == item.ticket then return end
 
-            local updated = data.edit_task(item.id, { ticket = input })
-            if not updated then return end
-            M.items[M.cursor] = updated
+            item.ticket = input
             render(buf)
         end)
     end, nil)
