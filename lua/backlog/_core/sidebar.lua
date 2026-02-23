@@ -193,6 +193,19 @@ local function setup_keymaps(buf)
         end)
     end, nil)
 
+    map(buf, "t", function()
+        local item = M.items[M.cursor]
+        if not item then return end
+        vim.ui.input({ prompt = "Edit task's ticket", default = item.ticket or "" }, function(input)
+            if not input or input == item.ticket then return end
+
+            local updated = data.edit_task(item.id, { ticket = input })
+            if not updated then return end
+            M.items[M.cursor] = updated
+            render(buf)
+        end)
+    end, nil)
+
     map(buf, "d", function()
         vim.opt.operatorfunc = "v:lua.sidebar_delete"
         return "g@"

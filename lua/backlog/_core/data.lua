@@ -207,7 +207,8 @@ function M.set_task_state(task_id, state)
     end
 
     p.state = state or states.ToDo
-    p.done_timestamp = (p.state == states.Done or p.state == states.Cancelled) and os.date("%Y-%m-%d") or ""
+    p.done_timestamp = (p.state == states.Done or p.state == states.Cancelled) and os.date("%Y-%m-%d") --[[@as string]]
+        or ""
     return p
 end
 
