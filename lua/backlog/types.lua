@@ -40,6 +40,14 @@
 ---@field scope_highlight string? Highlight group used for the task title.
 ---@field ticket_highlight string? Highlight group used for the ticket of the task.
 
+---@class backlog.HighlightMarker
+---@field row number Row number
+---@field col_start number Start position on the row
+---@field col_end number End position on the row
+---@field hl_group string Highlight group name
+---@field hl_eol boolean?
+---@field priority number?
+
 ---@class backlog.ConfigurationCommands
 ---    Customize the fallback behavior of all `:Backlog` commands.
 ---@field goodnight_moon backlog.ConfigurationGoodnightMoon?

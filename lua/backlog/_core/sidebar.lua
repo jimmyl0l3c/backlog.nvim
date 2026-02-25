@@ -1,6 +1,7 @@
 local configuration = require("backlog._core.configuration")
 local data = require("backlog._core.data")
 local states = require("backlog._core.states")
+local renderer = require("backlog._core.renderer")
 
 local header_lines = 1
 
@@ -26,78 +27,7 @@ local function set_cursor(item)
 end
 
 local function render(buf)
-    vim.bo[buf].modifiable = true
-
-    local lines = {}
-    local marks = {} -- {row, col_start, col_end, hl_group}
-
-    local title = " Backlog"
-    if M.project then title = title .. " - " .. M.project.title end
-
-    table.insert(lines, title)
-
-    for i, item in ipairs(M.items) do
-        local row = i - 1 + header_lines
-        local col = 0
-        local line = ""
-
-        local function append(text, hl_group)
-            if hl_group then table.insert(marks, { row, col, col + #text, hl_group }) end
-            line = line .. text
-            col = col + #text
-        end
-
-        local is_selected = i == M.cursor
-
-        local state = configuration.DATA.states[item.state]
-        append("  ", nil)
-        append(state.icon, state.highlight or nil)
-
-        if not M.project then
-            append(" [", "BacklogSubtle")
-            append(item.project, state.ticket_highlight or "BacklogTicket") -- TODO: change hihglight
-            append("]", "BacklogSubtle")
-        end
-
-        append(" ", nil)
-        append(item.ticket, state.ticket_highlight or "BacklogTicket")
-        append(" ", nil)
-        append(item.title, state.scope_highlight or "BacklogName")
-
-        append(" " .. item.priority, "BacklogSubtle")
-
-        table.insert(lines, line)
-
-        -- full-line select
-        if is_selected then table.insert(marks, { row, 0, #line, "BacklogSelected", hl_eol = true, priority = 100 }) end
-    end
-
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-    vim.bo[buf].modifiable = false
-
-    vim.api.nvim_buf_clear_namespace(buf, M.ns, 0, -1)
-
-    local border = string.rep("─", #title + 1)
-
-    vim.api.nvim_buf_set_extmark(buf, M.ns, 0, 0, {
-        end_col = #lines[1],
-        hl_group = "BacklogTitle",
-        priority = 200,
-        virt_lines = {
-            { { border, "BacklogBorder" } },
-        },
-        virt_lines_above = false,
-    })
-    for _, m in ipairs(marks) do
-        vim.api.nvim_buf_set_extmark(buf, M.ns, m[1], m[2], {
-            end_col = m[3],
-            hl_group = m[4],
-            hl_eol = m.hl_eol,
-            priority = m.priority or 200,
-        })
-    end
-
-    vim.bo[buf].modified = false
+    renderer.render({ cursor = M.cursor, items = M.items, project = M.project, buf = buf, ns = M.ns })
 end
 
 local function update_items(buf, project_id)
@@ -196,6 +126,17 @@ local function setup_keymaps(buf)
             local project_id = M.project and M.project.id or nil
             data.add_task({ project = project_id, title = input })
             update_items(buf, project_id)
+        end)
+    end, nil)
+
+    map(buf, "C", function()
+        local item = M.items[M.cursor]
+        if not item then return end
+
+        vim.ui.input({ prompt = "Add comment to task" }, function(input)
+            if not input then return end
+            data.add_comment(item, input)
+            render(buf)
         end)
     end, nil)
 

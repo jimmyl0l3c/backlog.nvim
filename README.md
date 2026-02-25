@@ -1,4 +1,4 @@
-# A Neovim Plugin Template
+# backlog.nvim
 
 A template repository used to create Neovim plugins.
 
