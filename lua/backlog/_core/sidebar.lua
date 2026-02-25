@@ -52,10 +52,19 @@ local function render(buf)
         local state = configuration.DATA.states[item.state]
         append("  ", nil)
         append(state.icon, state.highlight or nil)
+
+        if not M.project then
+            append(" [", "BacklogSubtle")
+            append(item.project, state.ticket_highlight or "BacklogTicket") -- TODO: change hihglight
+            append("]", "BacklogSubtle")
+        end
+
         append(" ", nil)
         append(item.ticket, state.ticket_highlight or "BacklogTicket")
         append(" ", nil)
         append(item.title, state.scope_highlight or "BacklogName")
+
+        append(" " .. item.priority, "BacklogSubtle")
 
         table.insert(lines, line)
 

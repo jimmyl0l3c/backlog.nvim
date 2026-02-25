@@ -184,14 +184,9 @@ function M.remove_task(id)
 end
 
 --- Add comment to a task.
----@param task_id string task id
+---@param task backlog.Task task
 ---@param content string comment's content
-function M.add_comment(task_id, content)
-    local task, _ = M.find_task(task_id)
-    if not task then
-        vim.notify("backlog: task not found " .. task_id, vim.log.levels.WARN)
-        return
-    end
+function M.add_comment(task, content)
     table.insert(task.comments, M.new_comment(content))
 end
 
