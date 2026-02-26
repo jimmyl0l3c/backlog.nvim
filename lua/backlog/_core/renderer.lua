@@ -30,10 +30,10 @@ function M.render(opts)
         v:end_line()
         if is_selected then v:highlight_last() end
 
-        -- for j, comment in ipairs(item.comments) do
-        --     table.insert(lines, j .. " " .. comment.content)
-        --     row = row + 1
-        -- end
+        for j, comment in ipairs(item.comments) do
+            v:append(" " .. j .. " " .. comment.content)
+            v:end_line()
+        end
     end
 
     v:render(opts.ns, opts.buf)

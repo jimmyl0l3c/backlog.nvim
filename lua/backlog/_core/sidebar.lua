@@ -1,33 +1,33 @@
 local configuration = require("backlog._core.configuration")
 local data = require("backlog._core.data")
 local states = require("backlog._core.states")
-local renderer = require("backlog._core.renderer")
+local compositor = require("backlog._core.compositor")
 
-local header_lines = 1
+local header_lines = 1 -- TODO: get from view or compositor
 
 local M = {
     cursor = 1,
     items = {},
     project = nil,
     pending_del = {},
+    compositor = nil,
 }
 
 --- Update cursor to select specified item, noop if item is not found.
 ---@param item backlog.Task
-local function set_cursor(item)
-    if not M.items or not item then return end
+local function set_cursor(item, comment_id)
+    if not M.compositor or not item then return end
 
-    for i, p in ipairs(M.items) do
-        if p.id == item.id then
-            M.cursor = i
-            vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
-            return
-        end
-    end
+    local index = M.compositor:get_index(item, comment_id)
+    if not index then return end
+
+    M.cursor = index
+    vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
 end
 
-local function render(buf)
-    renderer.render({ cursor = M.cursor, items = M.items, project = M.project, buf = buf, ns = M.ns })
+local function render(buf, clean)
+    if clean then M.compositor:prepare(M.items) end
+    M.compositor:render({ cursor = M.cursor, project = M.project, buf = buf, ns = M.ns })
 end
 
 local function update_items(buf, project_id)
@@ -39,7 +39,7 @@ local function update_items(buf, project_id)
     M.project = project
     M.items = items
 
-    render(buf or M.buf)
+    render(buf or M.buf, true)
 end
 
 local function map(buf, key, fn, opts)
@@ -49,16 +49,16 @@ end
 
 local function map_state(buf, key, state)
     map(buf, key, function()
-        local item = M.items[M.cursor]
-        if not item then return end
+        local task, _ = M.compositor:get_item(M.cursor)
+        if not task then return end
 
-        data.set_task_state(item, state)
-        render(buf)
+        data.set_task_state(task, state)
+        render(buf, true)
     end, nil)
 end
 
 _G.sidebar_delete = function(type)
-    if not M.items then return end
+    if not M.compositor or not M.items then return end
 
     local start_row, end_row
 
@@ -73,33 +73,39 @@ _G.sidebar_delete = function(type)
     local first = start_row - header_lines
     local last = end_row - header_lines
 
-    first = math.max(1, first)
-    last = math.min(#M.items, last)
+    local selection = M.compositor:select(first, last)
+    local prev = 1
 
-    if first > last then return end
+    for _, item in ipairs(selection) do
+        table.insert(M.pending_del, item.task.id)
 
-    for _ = first, last do
-        table.insert(M.pending_del, M.items[first].id)
-        table.remove(M.items, first)
+        for j = prev, #M.items do
+            if M.items[j].id == item.task.id then
+                table.remove(M.items, j)
+                prev = j
+                break
+            end
+        end
     end
 
-    M.cursor = math.min(M.cursor, #M.items)
+    M.compositor:prepare(M.items)
+    M.cursor = math.min(M.cursor, M.compositor:row_count())
     M.cursor = math.max(M.cursor, 1)
 
-    render(M.buf)
+    render(M.buf, false)
     vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
 end
 
 local function setup_keymaps(buf)
     map(buf, "j", function()
-        M.cursor = math.min(M.cursor + vim.v.count1, #M.items)
-        render(buf)
+        M.cursor = math.min(M.cursor + vim.v.count1, M.compositor:row_count())
+        render(buf, false)
         vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
     end, nil)
 
     map(buf, "k", function()
         M.cursor = math.max(M.cursor - vim.v.count1, 1)
-        render(buf)
+        render(buf, false)
         vim.api.nvim_win_set_cursor(0, { M.cursor + header_lines, 0 })
     end, nil)
 
@@ -110,12 +116,12 @@ local function setup_keymaps(buf)
     end
 
     map(buf, "<CR>", function()
-        local item = M.items[M.cursor]
-        if not item then return end
+        local task, _ = M.compositor:get_item(M.cursor)
+        if not task then return end
 
-        local state = item.state == states.Done and states.ToDo or states.Done
-        data.set_task_state(item, state)
-        render(buf)
+        local state = task.state == states.Done and states.ToDo or states.Done
+        data.set_task_state(task, state)
+        render(buf, true)
     end, nil)
 
     map(buf, "q", M.close, nil)
@@ -130,75 +136,85 @@ local function setup_keymaps(buf)
     end, nil)
 
     map(buf, "C", function()
-        local item = M.items[M.cursor]
-        if not item then return end
+        local task, _ = M.compositor:get_item(M.cursor)
+        if not task then return end
 
         vim.ui.input({ prompt = "Add comment to task" }, function(input)
             if not input then return end
-            data.add_comment(item, input)
-            render(buf)
+            data.add_comment(task, input)
+            render(buf, true)
         end)
     end, nil)
 
     map(buf, "e", function()
-        local item = M.items[M.cursor]
-        if not item then return end
+        local task, cid = M.compositor:get_item(M.cursor)
+        if not task then return end
+        local current = cid and task.comments[cid].content or task.title
 
-        vim.ui.input({ prompt = "Edit task", default = item.title }, function(input)
-            if not input or input == item.title then return end
-            item.title = input
-            render(buf)
+        vim.ui.input({ prompt = cid and "Edit comment" or "Edit task", default = current }, function(input)
+            if not input or input == current then return end
+            if cid then
+                task.comments[cid].content = input
+            else
+                task.title = input
+            end
+            render(buf, true)
         end)
     end, nil)
 
     map(buf, "+", function()
-        local item = M.items[M.cursor]
-        if not item then return end
+        local task, cid = M.compositor:get_item(M.cursor)
+        if not task then return end
 
-        item.priority = item.priority + vim.v.count1
+        task.priority = task.priority + vim.v.count1
         data.sort_tasks(M.items)
-        set_cursor(item)
-        render(buf)
+
+        M.compositor:prepare(M.items)
+        set_cursor(task, cid)
+        render(buf, false)
     end, nil)
 
     map(buf, "-", function()
-        local item = M.items[M.cursor]
-        if not item then return end
+        local task, cid = M.compositor:get_item(M.cursor)
+        if not task then return end
 
-        item.priority = item.priority - vim.v.count1
+        task.priority = task.priority - vim.v.count1
         data.sort_tasks(M.items)
-        set_cursor(item)
-        render(buf)
+
+        M.compositor:prepare(M.items)
+        set_cursor(task, cid)
+        render(buf, false)
     end, nil)
 
     map(buf, "t", function()
-        local item = M.items[M.cursor]
-        if not item then return end
-        vim.ui.input({ prompt = "Edit task's ticket", default = item.ticket or "" }, function(input)
-            if not input or input == item.ticket then return end
+        local task, _ = M.compositor:get_item(M.cursor)
+        if not task then return end
 
-            item.ticket = input
-            render(buf)
+        vim.ui.input({ prompt = "Edit task's ticket", default = task.ticket or "" }, function(input)
+            if not input or input == task.ticket then return end
+
+            task.ticket = input
+            render(buf, true)
         end)
     end, nil)
 
     map(buf, "d", function()
-        vim.opt.operatorfunc = "v:lua.sidebar_delete"
+        vim.o.operatorfunc = "v:lua.sidebar_delete"
         return "g@"
     end, { expr = true })
 
     map(buf, "dd", function()
-        vim.opt.operatorfunc = "v:lua.sidebar_delete"
-        return vim.v.count1 .. "g@_"
+        vim.o.operatorfunc = "v:lua.sidebar_delete"
+        return "g@_"
     end, { expr = true })
 
     map(buf, "dj", function()
-        vim.opt.operatorfunc = "v:lua.sidebar_delete"
+        vim.o.operatorfunc = "v:lua.sidebar_delete"
         return "g@j"
     end, { expr = true })
 
     map(buf, "dk", function()
-        vim.opt.operatorfunc = "v:lua.sidebar_delete"
+        vim.o.operatorfunc = "v:lua.sidebar_delete"
         return "g@k"
     end, { expr = true })
 end
@@ -211,7 +227,7 @@ local function setup_listeners(buf)
             local first = header_lines + 1
             M.cursor = math.max(cur - header_lines, 1)
             if cur < first then vim.api.nvim_win_set_cursor(0, { first, 0 }) end
-            render(buf)
+            render(buf, false)
         end,
     })
 
@@ -273,6 +289,7 @@ function M.open(project_id)
         setup_keymaps(buf)
         setup_listeners(buf)
         M.buf = buf
+        M.compositor = compositor:new()
     end
 
     update_items(nil, project_id)

@@ -17,7 +17,7 @@
 ---@field deadline string Optional task deadline, should be in format `%Y-%m-%d`.
 ---@field ticket string Optional ticket number the task is related to. (e.g. GH issue number)
 ---@field priority number Priority of the task used for sorting backlog.
----@field detail string Optional detailed description of the task.
+---@field detail string Optional path to a markdown file with detailed description of the task.
 ---@field added_timestamp string Created timestamp, automatically set when creating a task.
 ---@field done_timestamp string Done/cancelled timestamp, automatically set when state changes to
 ---@field comments backlog.TaskComment[] Optional comments of a task.
