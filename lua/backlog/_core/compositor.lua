@@ -1,8 +1,7 @@
 local View = require("backlog._core.view")
 local configuration = require("backlog._core.configuration")
 
--- TODO: move the types to separate file
--- TODO: move the default column definitions to configuration
+-- TODO: move to separate dir together with view and types
 
 ---@class backlog.Compositor
 ---@field definitions backlog.Compositor.ColumnDefinition[]
@@ -10,89 +9,13 @@ local configuration = require("backlog._core.configuration")
 ---@field colSizing backlog.Compositor.CellSize[]
 local Compositor = { spacing = 1 }
 
----@class backlog.Compositor.FixedCellSize
----@field rpad number? fixed right padding
----@field empty_fill number? fixed width used when field is empty
-
----@class backlog.Compositor.ColumnDefinition
----@field cell backlog.Compositor.Cell|fun(item:backlog.Task, ci:number?):backlog.Compositor.Cell
----@field fixed_size? backlog.Compositor.FixedCellSize
-
----@class backlog.Compositor.Text
----@field text string
----@field hl_group? string
-
----@class backlog.Compositor.Cell
----@field parts backlog.Compositor.Text[]
-
----@class backlog.Compositor.CellSize
----@field width number
----@field fixed? backlog.Compositor.FixedCellSize
-
----@class backlog.Compositor.Row
----@field cells backlog.Compositor.Cell[]
----@field task backlog.Task
----@field comment_id? number
-
----@class backlog.Compositor.Selection
----@field index number
----@field task backlog.Task
----@field comment_id? number
-
 --- Create new column compositor
 ---@return backlog.Compositor
 function Compositor:new()
     local newObject = setmetatable({}, self)
     self.__index = self
     newObject.rows = {}
-    newObject.definitions = {
-        {
-            cell = function(item, ci)
-                if ci ~= nil then return {} end
-                local state = configuration.DATA.states[item.state]
-                return { parts = { { text = "  " .. state.icon, hl_group = state.highlight } } }
-            end,
-            fixed_size = { rpad = 1, empty_fill = 2 },
-        },
-        {
-            cell = function(item, ci)
-                if ci ~= nil then return {} end
-                local state = configuration.DATA.states[item.state]
-                return {
-                    parts = {
-                        { text = "[", hl_group = "BacklogSubtle" },
-                        { text = item.project, hl_group = state.ticket_highlight or "BacklogTicket" },
-                        { text = "]", hl_group = "BacklogSubtle" },
-                    },
-                }
-            end,
-        },
-        {
-            cell = function(item, ci)
-                if ci ~= nil then return {} end
-                local state = configuration.DATA.states[item.state]
-                return {
-                    parts = { { text = item.ticket, hl_group = state.ticket_highlight or "BacklogTicket" } },
-                }
-            end,
-        },
-        {
-            cell = function(item, ci)
-                if ci ~= nil then return { parts = { { text = " • " .. item.comments[ci].content } } } end
-
-                local state = configuration.DATA.states[item.state]
-                return {
-                    parts = { { text = item.title, hl_group = state.scope_highlight or "BacklogName" } },
-                }
-            end,
-        },
-        {
-            cell = function(item, ci)
-                if ci ~= nil then return {} end
-                return { parts = { { text = tostring(item.priority), hl_group = "BacklogSubtle" } } }
-            end,
-        },
-    }
+    newObject.definitions = vim.tbl_extend("force", {}, configuration.DATA.column_definitions)
     newObject.colSizing = vim.tbl_map(
         function(def) return { width = 0, fixed = def.fixed_size } end,
         newObject.definitions

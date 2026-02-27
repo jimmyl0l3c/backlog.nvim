@@ -29,7 +29,46 @@ function M.open_sidebar(project) open_cmd.run(project) end
 --- Close tasks sidebar.
 function M.close_sidebar() close_cmd.run() end
 
--- TODO: expose project add, edit, delete
--- TODO: expose task add, edit, delete
+--- Add a new project
+---@param opts backlog.Project
+---@return backlog.Project?
+function M.add_project(opts) return data.add_project(opts) end
+
+--- Edit project
+---@param id string
+---@param opts backlog.Project
+---@return backlog.Project?
+function M.edit_project(id, opts)
+    local p, i = data.find_project(id)
+    if not p or not i then
+        vim.notify("Project not found: " .. id, vim.log.levels.ERROR)
+        return nil
+    end
+
+    p.title = opts.title or p.title
+    p.path = opts.path or p.path
+    return p
+end
+
+--- Delete project
+---@param id string
+---@return boolean success
+function M.delete_project(id) return data.remove_project(id) end
+
+--- Add new task
+---@param opts backlog.Task
+---@return backlog.Task?
+function M.add_task(opts) return data.add_task(opts) end
+
+--- Edit task
+---@param id string
+---@param opts backlog.Task
+---@return backlog.Task?
+function M.edit_task(id, opts) return data.edit_task(id, opts) end
+
+--- Delete task
+---@param id string
+---@return boolean success
+function M.delete_task(id) return data.remove_task(id) end
 
 return M

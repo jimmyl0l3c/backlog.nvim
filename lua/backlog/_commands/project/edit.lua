@@ -18,7 +18,7 @@ function M.run(id, title, path)
     local data = require("backlog._core.data")
 
     local p, i = data.find_project(id)
-    if not p then
+    if not p or not i then
         vim.notify("Project not found: " .. id, vim.log.levels.ERROR)
         return
     end

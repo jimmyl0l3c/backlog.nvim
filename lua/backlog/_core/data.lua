@@ -1,6 +1,8 @@
 local states = require("backlog._core.states")
 
-local data_path = vim.fn.stdpath("data") .. "/backlog/data.json"
+local data_root = vim.fn.stdpath("data") .. "/backlog"
+local data_path = data_root .. "/data.json"
+local detail_root = data_root .. "/detail"
 
 ---@type backlog.Project
 local global_project = {
@@ -14,6 +16,7 @@ local M = { store = {} }
 local function ensure_dir()
     local dir = vim.fn.fnamemodify(data_path, ":h")
     if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, "p") end
+    if vim.fn.isdirectory(detail_root) == 0 then vim.fn.mkdir(detail_root, "p") end
 end
 
 math.randomseed(os.time())
@@ -186,9 +189,7 @@ end
 --- Add comment to a task.
 ---@param task backlog.Task task
 ---@param content string comment's content
-function M.add_comment(task, content)
-    table.insert(task.comments, M.new_comment(content))
-end
+function M.add_comment(task, content) table.insert(task.comments, M.new_comment(content)) end
 
 --- Set tasks state (and done_timestamp if applicable).
 ---@param task backlog.Task task to update

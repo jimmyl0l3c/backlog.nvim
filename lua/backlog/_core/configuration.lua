@@ -14,15 +14,58 @@ vim.g.loaded_backlog = false
 ---@type backlog.Configuration
 M.DATA = {}
 
--- TODO: (you) If you use the mega.logging module for built-in logging, keep
--- the `logging` section. Otherwise delete it.
---
--- It's recommended to keep the `display` section in any case.
---
 ---@type backlog.Configuration
 local _DEFAULTS = {
     logging = { level = "info", use_console = false, use_file = false },
     win_opts = { split = "right" },
+    column_definitions = {
+        {
+            cell = function(item, ci)
+                if ci ~= nil then return {} end
+                local state = M.DATA.states[item.state]
+                return { parts = { { text = "  " .. state.icon, hl_group = state.highlight } } }
+            end,
+            fixed_size = { rpad = 1, empty_fill = 2 },
+        },
+        {
+            cell = function(item, ci)
+                if ci ~= nil then return {} end
+                local state = M.DATA.states[item.state]
+                return {
+                    parts = {
+                        { text = "[", hl_group = "BacklogSubtle" },
+                        { text = item.project, hl_group = state.ticket_highlight or "BacklogTicket" },
+                        { text = "]", hl_group = "BacklogSubtle" },
+                    },
+                }
+            end,
+        },
+        {
+            cell = function(item, ci)
+                if ci ~= nil then return {} end
+                local state = M.DATA.states[item.state]
+                return {
+                    parts = { { text = item.ticket, hl_group = state.ticket_highlight or "BacklogTicket" } },
+                }
+            end,
+        },
+        {
+            cell = function(item, ci)
+                if ci ~= nil then return { parts = { { text = " • " .. item.comments[ci].content } } } end
+
+                local state = M.DATA.states[item.state]
+                return {
+                    parts = { { text = item.title, hl_group = state.scope_highlight or "BacklogName" } },
+                }
+            end,
+        },
+        {
+            cell = function(item, ci)
+                if ci ~= nil then return {} end
+                return { parts = { { text = tostring(item.priority), hl_group = "BacklogSubtle" } } }
+            end,
+        },
+    },
     states = {
         [states.ToDo] = {
             icon = "󰄱",

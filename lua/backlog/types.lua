@@ -27,6 +27,7 @@
 ---@field timestamp string Created timestamp, automatically set when creating a comment.
 
 ---@class backlog.Configuration The user's customizations for this plugin.
+---@field column_definitions backlog.Compositor.ColumnDefinition[]?
 ---@field commands backlog.ConfigurationCommands? Customize the fallback behavior of all `:Backlog` commands.
 ---@field logging backlog.LoggingConfiguration? Control how and which logs print to file / Neovim.
 ---@field win_opts vim.api.keyset.win_config? Sidebar window config.
