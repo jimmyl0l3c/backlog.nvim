@@ -16,10 +16,10 @@ function Compositor:new()
     self.__index = self
     newObject.rows = {}
     newObject.definitions = vim.tbl_extend("force", {}, configuration.DATA.column_definitions)
-    newObject.colSizing = vim.tbl_map(
-        function(def) return { width = 0, fixed = def.fixed_size } end,
-        newObject.definitions
-    )
+    newObject.colSizing = {}
+    for _, def in ipairs(newObject.definitions) do
+        newObject.colSizing[def.id] = { width = 0, fixed = def.fixed_size }
+    end
     return newObject
 end
 
@@ -43,47 +43,57 @@ function Compositor:prepare(items)
         local row = { cells = {}, task = item } ---@type backlog.Compositor.Row
         table.insert(self.rows, row)
 
-        for i, def in ipairs(self.definitions) do
+        for _, def in ipairs(self.definitions) do
             local cell = def.cell(item, nil)
-            local colsize = self.colSizing[i]
+            local colsize = self.colSizing[def.id]
             colsize.width = math.max(colsize.width, cellWidth(cell))
-            table.insert(row.cells, cell)
+            table.insert(row.cells, vim.tbl_extend("force", { col_id = def.id }, cell))
         end
 
         for j = 1, #item.comments, 1 do
             local comment_row = { cells = {}, task = item, comment_id = j } ---@type backlog.Compositor.Row
             table.insert(self.rows, comment_row)
 
-            for i, def in ipairs(self.definitions) do
+            for _, def in ipairs(self.definitions) do
                 local cell = def.cell(item, j)
-                local colsize = self.colSizing[i]
+                local colsize = self.colSizing[def.id]
                 colsize.width = math.max(colsize.width, cellWidth(cell))
-                table.insert(comment_row.cells, cell)
+                table.insert(comment_row.cells, vim.tbl_extend("force", { col_id = def.id }, cell))
             end
         end
     end
 end
 
+--- Render single column
+---@param v backlog.View
+---@param col backlog.Compositor.ProcessedCell
+function Compositor:_render_col(v, col)
+    local width = 0
+    for _, part in ipairs(col.parts or {}) do
+        v:append(part.text, part.hl_group)
+        width = width + #part.text
+    end
+
+    local size = self.colSizing[col.col_id]
+    local rpad = size.width - width
+    if size.fixed then
+        rpad = size.fixed.rpad or 0
+        if width == 0 then rpad = rpad + (size.fixed.empty_fill or 0) end
+    end
+    v:append(string.rep(" ", rpad + self.spacing), nil)
+end
+
 --- Create columns view
+---@param opts backlog.Compositor.RenderOpts
 function Compositor:render(opts)
+    local hidden = opts.hiden_cols or {}
+
     local v = View:new()
     v:add_header(opts.project)
 
     for i, row in ipairs(self.rows) do
-        for j, col in ipairs(row.cells) do
-            local width = 0
-            for _, part in ipairs(col.parts or {}) do
-                v:append(part.text, part.hl_group)
-                width = width + #part.text
-            end
-
-            local size = self.colSizing[j]
-            local rpad = size.width - width
-            if size.fixed then
-                rpad = size.fixed.rpad or 0
-                if width == 0 then rpad = rpad + (size.fixed.empty_fill or 0) end
-            end
-            v:append(string.rep(" ", rpad + self.spacing), nil)
+        for _, col in ipairs(row.cells) do
+            if not vim.tbl_contains(hidden, col.col_id) then self:_render_col(v, col) end
         end
 
         v:end_line()

@@ -20,6 +20,7 @@ local _DEFAULTS = {
     win_opts = { split = "right" },
     column_definitions = {
         {
+            id = "icon",
             cell = function(item, ci)
                 if ci ~= nil then return {} end
                 local state = M.DATA.states[item.state]
@@ -28,6 +29,7 @@ local _DEFAULTS = {
             fixed_size = { rpad = 1, empty_fill = 2 },
         },
         {
+            id = "project",
             cell = function(item, ci)
                 if ci ~= nil then return {} end
                 local state = M.DATA.states[item.state]
@@ -41,6 +43,7 @@ local _DEFAULTS = {
             end,
         },
         {
+            id = "ticket",
             cell = function(item, ci)
                 if ci ~= nil then return {} end
                 local state = M.DATA.states[item.state]
@@ -50,6 +53,7 @@ local _DEFAULTS = {
             end,
         },
         {
+            id = "title",
             cell = function(item, ci)
                 if ci ~= nil then return { parts = { { text = " • " .. item.comments[ci].content } } } end
 
@@ -60,6 +64,7 @@ local _DEFAULTS = {
             end,
         },
         {
+            id = "priority",
             cell = function(item, ci)
                 if ci ~= nil then return {} end
                 return { parts = { { text = tostring(item.priority), hl_group = "BacklogSubtle" } } }
