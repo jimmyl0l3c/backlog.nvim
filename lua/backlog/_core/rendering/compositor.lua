@@ -1,7 +1,5 @@
-local View = require("backlog._core.view")
+local View = require("backlog._core.rendering.view")
 local configuration = require("backlog._core.configuration")
-
--- TODO: move to separate dir together with view and types
 
 ---@class backlog.Compositor
 ---@field definitions backlog.Compositor.ColumnDefinition[]

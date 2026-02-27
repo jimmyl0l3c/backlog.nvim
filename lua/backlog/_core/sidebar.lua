@@ -1,7 +1,7 @@
 local configuration = require("backlog._core.configuration")
 local data = require("backlog._core.data")
 local states = require("backlog._core.states")
-local compositor = require("backlog._core.compositor")
+local compositor = require("backlog._core.rendering.compositor")
 
 local header_lines = 1 -- TODO: get from view or compositor
 
