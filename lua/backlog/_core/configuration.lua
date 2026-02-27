@@ -18,6 +18,9 @@ M.DATA = {}
 local _DEFAULTS = {
     logging = { level = "info", use_console = false, use_file = false },
     win_opts = { split = "right", win = 0 },
+    projects = {
+        root_markers = { ".git", "go.mod", "pyproject.toml", "Cargo.toml" },
+    },
     column_definitions = {
         {
             id = "icon",

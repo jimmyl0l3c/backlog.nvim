@@ -19,11 +19,16 @@ function M.make_parser()
             return vim.tbl_map(function(project) return project.id end, data.store.projects)
         end,
     })
+    parser:add_parameter({
+        names = { "--detect", "-d" },
+        action = "store_true",
+        help = "Detect project",
+    })
 
     parser:set_execute(function(data)
         ---@cast data mega.cmdparse.NamespaceExecuteArguments
         local open_ = require("backlog._commands.open.runner")
-        open_.run(data.namespace.project)
+        open_.run(data.namespace.project, data.namespace.detect)
     end)
 
     return parser

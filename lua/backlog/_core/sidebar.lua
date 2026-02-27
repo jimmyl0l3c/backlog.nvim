@@ -277,7 +277,8 @@ local function setup_highlights()
 end
 
 --- Open sidebar with specified project's tasks or all when project is nil
-function M.open(project_id)
+---@param opts backlog.ResolveProjectOpts
+function M.open(opts)
     if not M.buf then
         M.ns = vim.api.nvim_create_namespace("backlog")
 
@@ -292,7 +293,9 @@ function M.open(project_id)
         M.compositor = compositor:new()
     end
 
-    update_items(nil, project_id)
+    local project, _ = data.resolve_project(opts)
+
+    update_items(nil, (project or {}).id)
 
     if not M.win then M.win = vim.api.nvim_open_win(M.buf, true, configuration.DATA.win_opts) end
 end

@@ -12,7 +12,7 @@ function M.make_parser()
 
     local prj_params = {
         { "title", type = "string", help = "The title of the project." },
-        { "path", type = "string", help = "The root path of the project." },
+        { names = { "--path", "-p" }, type = "string", help = "The root path of the project." },
     }
     local id_choices = {
         "id",
@@ -28,6 +28,11 @@ function M.make_parser()
 
     local add = subparsers:add_parser({ "add", help = "Add new project." })
     add:add_parameter({ "id", type = "string", help = "The id of the project.", required = true })
+    add:add_parameter({
+        names = { "--detect", "-d" },
+        action = "store_true",
+        help = "Detect project root",
+    })
 
     local edit = subparsers:add_parser({ "edit", help = "Edit existing project" })
     edit:add_parameter(id_choices)
@@ -43,7 +48,7 @@ function M.make_parser()
     add:set_execute(function(data)
         ---@cast data mega.cmdparse.NamespaceExecuteArguments
         local add_ = require("backlog._commands.project.add")
-        add_.run(data.namespace.id, data.namespace.title, data.namespace.path)
+        add_.run(data.namespace.id, data.namespace.title, data.namespace.path, data.namespace.detect)
     end)
 
     edit:set_execute(function(data)
