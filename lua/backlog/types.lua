@@ -28,7 +28,7 @@
 
 ---@class backlog.ResolveProjectOpts
 ---@field project_id string?
----@field root_markers string[]?
+---@field path string?
 
 ---@class backlog.Configuration The user's customizations for this plugin.
 ---@field column_definitions backlog.Compositor.ColumnDefinition[]?

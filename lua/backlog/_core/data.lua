@@ -129,19 +129,33 @@ function M.find_project(id)
 end
 
 --- Attempt to detect project by path.
----@param opts backlog.ResolveProjectOpts
+---@param opts backlog.ResolveProjectOpts?
 ---@return backlog.Project? p, number? i
 function M.resolve_project(opts)
     if not opts then return nil end
     if opts.project_id then return M.find_project(opts.project_id) end
 
-    local root = vim.fs.root(0, opts.root_markers or {})
-    if not root then return nil end
+    if not opts.path then return nil end
+
+    local result = nil
 
     for i, p in ipairs(M.store.projects) do
-        if p.path == root then return p, i end
+        local rel = vim.fs.relpath(p.path, opts.path)
+
+        if rel then
+            if not result then
+                result = { p = p, i = i, rel = rel }
+            -- NOTE: find the closest match
+            elseif #rel < #result.rel then
+                result.p = p
+                result.i = i
+                result.rel = rel
+            end
+        end
     end
-    return nil
+
+    if not result then return nil end
+    return result.p, result.i
 end
 
 --- Remove project.

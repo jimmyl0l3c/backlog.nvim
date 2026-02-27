@@ -15,10 +15,17 @@ function M.run(project, detect)
     _LOGGER:debug("Filtering tasks by project.", project)
 
     local sidebar = require("backlog._core.sidebar")
-    local configuration = require("backlog._core.configuration")
 
     if detect and not project then
-        sidebar.open({ root_markers = configuration.DATA.projects.root_markers })
+        local path ---@type string
+        if vim.bo[0].buftype ~= "" then
+            path = assert(vim.uv.cwd())
+        else
+            path = vim.api.nvim_buf_get_name(0)
+        end
+        path = vim.fs.abspath(path)
+
+        sidebar.open({ path = path })
         return
     end
 

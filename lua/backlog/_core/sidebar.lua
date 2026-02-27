@@ -277,7 +277,7 @@ local function setup_highlights()
 end
 
 --- Open sidebar with specified project's tasks or all when project is nil
----@param opts backlog.ResolveProjectOpts
+---@param opts backlog.ResolveProjectOpts?
 function M.open(opts)
     if not M.buf then
         M.ns = vim.api.nvim_create_namespace("backlog")
