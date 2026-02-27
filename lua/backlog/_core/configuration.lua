@@ -17,7 +17,7 @@ M.DATA = {}
 ---@type backlog.Configuration
 local _DEFAULTS = {
     logging = { level = "info", use_console = false, use_file = false },
-    win_opts = { split = "right" },
+    win_opts = { split = "right", win = 0 },
     column_definitions = {
         {
             id = "icon",
@@ -103,7 +103,7 @@ local _DEFAULTS = {
     },
     keys = {
         [states.ToDo] = { "r" },
-        [states.Next] = { ">", "n" },
+        [states.Next] = { ">" },
         [states.Priority] = { "!" },
         [states.Cancelled] = { "~", "D" },
         [states.Done] = { "x" },
