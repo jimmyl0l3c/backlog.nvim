@@ -36,8 +36,15 @@ local function cellWidth(cell)
     return w
 end
 
-function Compositor:prepare(items)
+function Compositor:_reset()
     self.rows = {}
+    for _, size in pairs(self.colSizing) do
+        size.width = 0
+    end
+end
+
+function Compositor:prepare(items)
+    self:_reset()
 
     for _, item in ipairs(items) do
         local row = { cells = {}, task = item } ---@type backlog.Compositor.Row
@@ -94,7 +101,9 @@ function Compositor:render(opts)
 
     for i, row in ipairs(self.rows) do
         for _, col in ipairs(row.cells) do
-            if not vim.tbl_contains(hidden, col.col_id) then self:_render_col(v, col) end
+            if self.colSizing[col.col_id].width > 0 and not vim.tbl_contains(hidden, col.col_id) then
+                self:_render_col(v, col)
+            end
         end
 
         v:end_line()
