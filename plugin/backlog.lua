@@ -7,6 +7,7 @@ local _PREFIX = "Backlog"
 ---@type mega.cmdparse.ParserCreator
 local _SUBCOMMANDS = function()
     local project_cmd = require("backlog._commands.project.parser")
+    local task_cmd = require("backlog._commands.task.parser")
     local open_cmd = require("backlog._commands.open.parser")
     local close_cmd = require("backlog._commands.close.parser")
 
@@ -14,6 +15,7 @@ local _SUBCOMMANDS = function()
     local subparsers = parser:add_subparsers({ "commands", help = "All runnable commands." })
 
     subparsers:add_parser(project_cmd.make_parser())
+    subparsers:add_parser(task_cmd.make_parser())
     subparsers:add_parser(open_cmd.make_parser())
     subparsers:add_parser(close_cmd.make_parser())
 
