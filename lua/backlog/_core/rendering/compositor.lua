@@ -108,6 +108,11 @@ function Compositor:render(opts)
         if i == opts.cursor then v:highlight_last() end
     end
 
+    if #self.rows == 0 then
+        v:append("No tasks", "BacklogSubtle")
+        v:end_line()
+    end
+
     v:render(opts.ns, opts.buf)
 end
 
