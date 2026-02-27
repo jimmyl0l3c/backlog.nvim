@@ -87,6 +87,7 @@ end
 ---@param opts backlog.Compositor.RenderOpts
 function Compositor:render(opts)
     local hidden = opts.hiden_cols or {}
+    if opts.project then table.insert(hidden, "project") end
 
     local v = View:new()
     v:add_header(opts.project)
