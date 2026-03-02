@@ -1,3 +1,7 @@
+local logging = require("mega.logging")
+
+local _LOGGER = logging.get_logger("backlog._core.data")
+
 local states = require("backlog._core.states")
 
 local data_root = vim.fn.stdpath("data") .. "/backlog"
@@ -136,13 +140,16 @@ function M.resolve_project(opts)
     if opts.project_id then return M.find_project(opts.project_id) end
 
     if not opts.path then return nil end
+    _LOGGER:debug("Resolving project based on path.", opts.path)
 
     local result = nil
 
     for i, p in ipairs(M.store.projects) do
-        local rel = vim.fs.relpath(p.path, opts.path)
+        local rel = nil
+        if p.path ~= "" then rel = vim.fs.relpath(p.path, opts.path) end
 
         if rel then
+            _LOGGER:debug("Detected project.", rel, p)
             if not result then
                 result = { p = p, i = i, rel = rel }
             -- NOTE: find the closest match
@@ -155,6 +162,7 @@ function M.resolve_project(opts)
     end
 
     if not result then return nil end
+    _LOGGER:info("Resolved project.", result.p)
     return result.p, result.i
 end
 
