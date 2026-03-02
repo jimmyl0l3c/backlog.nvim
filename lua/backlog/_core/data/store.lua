@@ -2,32 +2,12 @@ local logging = require("mega.logging")
 
 local _LOGGER = logging.get_logger("backlog._core.data")
 
+local constants = require("backlog._core.data.constants")
+local files = require("backlog._core.data.files")
+
 local states = require("backlog._core.states")
 
-local data_root = vim.fn.stdpath("data") .. "/backlog"
-local tasks_root = data_root .. "/tasks"
-local data_path = data_root .. "/data.json"
-local projects_path = data_root .. "/projects.json"
-local detail_root = data_root .. "/detail"
-
-DATA_VERSION = 1
-
----@type backlog.Project
-local global_project = {
-    id = "global",
-    title = "Global",
-    tags = {},
-    root_path = "",
-    data_path = data_root .. "global.json",
-}
-
 local M = { store = {} }
-
-local function ensure_dir()
-    local dir = vim.fn.fnamemodify(data_path, ":h")
-    if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, "p") end
-    if vim.fn.isdirectory(detail_root) == 0 then vim.fn.mkdir(detail_root, "p") end
-end
 
 math.randomseed(os.time())
 
@@ -46,7 +26,7 @@ function M.new_project(opts)
         title = opts.title or opts.id,
         tags = opts.tags or {},
         root_path = opts.root_path or "",
-        data_path = opts.data_path or tasks_root .. "/" .. opts.id .. ".json",
+        data_path = files.tasks_path(opts),
     }
 end
 
@@ -58,7 +38,7 @@ function M.new_task(opts)
     ---@type backlog.Task
     return {
         id = uid(),
-        project = opts.project or global_project.id,
+        project = opts.project or constants.GLOBAL_PROJECT.id,
         title = opts.title,
         state = opts.state or "todo",
         deadline = opts.deadline or "",
@@ -84,84 +64,22 @@ end
 function M.init()
     M.store = M.load()
     -- Ensure default global project exists
-    if not M.find_project(global_project.id) then M.add_project(global_project) end
+    if not M.find_project(constants.GLOBAL_PROJECT.id) then M.add_project(constants.GLOBAL_PROJECT) end
 end
 
---- Load data from `data.json` and return it.
----@return backlog.v0.Projects
+--- Load all data to data store.
 function M.load()
-    if vim.fn.filereadable(data_path) == 0 then return { projects = {}, tasks = {} } end
-    local raw = table.concat(vim.fn.readfile(data_path), "\n")
-    local ok, data = pcall(vim.fn.json_decode, raw)
-    if not ok or type(data) ~= "table" then
-        vim.notify("backlog: failed to parse data.json", vim.log.levels.ERROR)
-        return { projects = {}, tasks = {} }
-    end
-    data.projects = data.projects or {}
-    data.tasks = data.tasks or {}
-    return data
-end
-
---- Load projects from JSON and return them.
----@param path string path to the data file
----@return backlog.data.Projects
-function M.load_projects(path)
-    if vim.fn.filereadable(path) == 0 then
-        ---@type backlog.data.Projects
-        return { version = DATA_VERSION, projects = {} }
-    end
-    local raw = table.concat(vim.fn.readfile(path), "\n")
-    local ok, data = pcall(vim.fn.json_decode, raw)
-    if not ok or type(data) ~= "table" then
-        vim.notify("backlog: failed to parse " .. path, vim.log.levels.ERROR)
-        ---@type backlog.data.Projects
-        return { version = DATA_VERSION, projects = {} }
-    end
-    data.version = data.version or DATA_VERSION
-    data.projects = data.projects or {}
-    return data
-end
-
---- Load tasks from JSON and return them.
----@param path string path to the data file
----@return backlog.data.Tasks?
-function M.load_tasks(path)
-    if vim.fn.filereadable(path) == 0 then return nil end
-    local raw = table.concat(vim.fn.readfile(path), "\n")
-    local ok, data = pcall(vim.fn.json_decode, raw)
-    if not ok or type(data) ~= "table" then
-        vim.notify("backlog: failed to parse " .. path, vim.log.levels.ERROR)
-        return nil
-    end
-    assert(data.project, "project is required field of tasks file")
-    data.version = data.version or DATA_VERSION
-    data.tasks = data.tasks or {}
+    local projects = files.load_projects(constants.PROJECTS_PATH)
+    local data = { projects = projects, tasks = {} }
+    -- TODO: load tasks
     return data
 end
 
 --- Save current state to file.
 ---@return boolean success
 function M.save()
-    ensure_dir()
-    local ok, encoded = pcall(vim.fn.json_encode, M.store)
-    if not ok then
-        vim.notify("backlog: failed to encode data", vim.log.levels.ERROR)
-        return false
-    end
-    vim.fn.writefile({ encoded }, data_path)
-    return true
-end
-
---- Save current state to file.
----@param path string
----@param data table
----@return boolean success
-function M.save_file(path, data)
-    ensure_dir()
-    local ok, encoded = pcall(vim.fn.json_encode, data)
-    if not ok then return false end
-    vim.fn.writefile({ encoded }, path)
-    return true
+    -- TODO: implement
+    return false
 end
 
 --- Add project to backlog
@@ -246,7 +164,7 @@ function M.add_task(opts)
         return nil
     end
 
-    opts.project = opts.project or global_project.id
+    opts.project = opts.project or constants.GLOBAL_PROJECT.id
 
     if not M.find_project(opts.project) then
         vim.notify("backlog: unknown project id: " .. (opts.project or "nil"), vim.log.levels.ERROR)

@@ -46,7 +46,7 @@ function M.edit_project(id, opts)
     end
 
     p.title = opts.title or p.title
-    p.path = opts.path or p.path
+    p.root_path = opts.root_path or p.root_path
     return p
 end
 

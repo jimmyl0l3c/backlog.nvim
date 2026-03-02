@@ -19,9 +19,12 @@ function M.run(id, title, path, detect)
     local data = require("backlog._core.data")
     local configuration = require("backlog._core.configuration")
 
-    if detect and not path then path = vim.fs.root(0, configuration.DATA.projects.root_markers) or "" end
+    if detect and not path then
+        path = vim.fs.root(0, configuration.DATA.projects.root_markers) or ""
+        if path ~= "" then vim.notify("Root path detected: " .. path, vim.log.levels.DEBUG) end
+    end
 
-    if not data.add_project({ id = id, title = title, path = path }) then return end
+    if not data.add_project({ id = id, title = title, root_path = path }) then return end
 
     vim.notify("Project created: " .. id, vim.log.levels.INFO)
 

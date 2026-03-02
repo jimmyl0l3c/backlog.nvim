@@ -23,7 +23,7 @@ function M.run(id, title, path)
         return
     end
 
-    data.store.projects[i] = { id = id, title = title or p.title, path = path or p.path }
+    data.store.projects[i] = { id = id, title = title or p.title, path = path or p.root_path }
 
     vim.notify("Project updated: " .. id, vim.log.levels.INFO)
 

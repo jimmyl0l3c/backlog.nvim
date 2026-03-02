@@ -4,10 +4,21 @@
 --- operation of this Lua plugin.
 ---
 
+---@class backlog.data.Projects
+---@field version number
+---@field projects backlog.Project[]
+
+---@class backlog.data.Tasks
+---@field version number
+---@field project string
+---@field tasks backlog.Task[]
+
 ---@class backlog.Project The project for grouping tasks.
 ---@field id string Human-readable project id.
 ---@field title string Optional more descriptive title of a project, uses id otherwise.
----@field path string? Optional path pattern for automatic detection of project.
+---@field tags string[] Optional project tags, useful for grouping projects.
+---@field root_path string? Optional path pattern for automatic detection of project.
+---@field data_path string Path to the tasks file.
 
 ---@class backlog.Task A task.
 ---@field id string Automatically generated id used to idetify tasks.
