@@ -20,11 +20,11 @@ function M.make_parser()
         help = "The id of the task.",
         required = true,
         choices = function()
-            local data = require("backlog._core.data")
-            if not data.store or not data.store.tasks then return {} end
+            local store = require("backlog._core.data.store")
+            local tasks = store.all_tasks()
             return vim.tbl_map(
                 function(task) return table.concat({ task.id, task.project, task.title }, "|") end,
-                data.store.tasks
+                tasks
             )
         end,
     }
@@ -36,9 +36,9 @@ function M.make_parser()
         help = "The id of project.",
         required = true,
         choices = function()
-            local data = require("backlog._core.data")
-            if not data.store or not data.store.projects then return {} end
-            return vim.tbl_map(function(project) return project.id end, data.store.projects)
+            local store = require("backlog._core.data.store")
+            if not store.store or not store.store.projects then return {} end
+            return vim.tbl_map(function(project) return project.id end, store.store.projects)
         end,
     })
     add:add_parameter({ "title", type = "string", help = "Title of the task", required = true })
@@ -51,10 +51,10 @@ function M.make_parser()
         help = "Field to update",
         required = true,
         choices = function()
-            local data = require("backlog._core.data")
+            local store = require("backlog._core.data.store")
             return vim.tbl_filter(
                 function(k) return not vim.tbl_contains({ "id", "added_timestamp", "comments" }, k) end,
-                vim.tbl_keys(data.new_task({ title = "" }))
+                vim.tbl_keys(store.new_task({ title = "" }))
             )
         end,
     })

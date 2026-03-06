@@ -13,16 +13,16 @@ local M = {}
 function M.run(id)
     _LOGGER:debug("Running project delete.", id)
 
-    local data = require("backlog._core.data")
+    local store = require("backlog._core.data.store")
 
-    if not data.remove_project(id) then
+    if not store.remove_project(id) then
         vim.notify("Project could not be deleted: " .. id, vim.log.levels.ERROR)
         return
     end
 
     vim.notify("Project deleted: " .. id, vim.log.levels.INFO)
 
-    if data.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
+    if store.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
 end
 
 return M

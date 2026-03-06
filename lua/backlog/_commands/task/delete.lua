@@ -17,16 +17,16 @@ function M.run(id)
         return
     end
 
-    local data = require("backlog._core.data")
+    local store = require("backlog._core.data.store")
 
-    if not data.remove_task(id) then
+    if not store.remove_task(id) then
         vim.notify("Task could not be deleted: " .. id, vim.log.levels.ERROR)
         return
     end
 
     vim.notify("Task deleted: " .. id, vim.log.levels.INFO)
 
-    if data.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
+    if store.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
 end
 
 return M

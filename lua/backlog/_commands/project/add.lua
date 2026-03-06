@@ -16,7 +16,7 @@ local M = {}
 function M.run(id, title, path, detect)
     _LOGGER:debug("Running project add.", id, title, path, detect)
 
-    local data = require("backlog._core.data")
+    local store = require("backlog._core.data.store")
     local configuration = require("backlog._core.configuration")
 
     if detect and not path then
@@ -24,11 +24,11 @@ function M.run(id, title, path, detect)
         if path ~= "" then vim.notify("Root path detected: " .. path, vim.log.levels.DEBUG) end
     end
 
-    if not data.add_project({ id = id, title = title, root_path = path }) then return end
+    if not store.add_project({ id = id, title = title, root_path = path }) then return end
 
     vim.notify("Project created: " .. id, vim.log.levels.INFO)
 
-    if data.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
+    if store.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
 end
 
 return M

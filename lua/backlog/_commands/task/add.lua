@@ -14,16 +14,16 @@ local M = {}
 function M.run(project_id, title)
     _LOGGER:debug("Running task add.", project_id, title)
 
-    local data = require("backlog._core.data")
+    local store = require("backlog._core.data.store")
 
-    if not data.add_task({ project = project_id, title = title }) then
+    if not store.add_task({ project = project_id, title = title }) then
         vim.notify("Task could not be created.", vim.log.levels.ERROR)
         return
     end
 
     vim.notify("Task created.", vim.log.levels.INFO)
 
-    if data.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
+    if store.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
 end
 
 return M

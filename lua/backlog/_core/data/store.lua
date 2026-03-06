@@ -1,6 +1,6 @@
 local logging = require("mega.logging")
 
-local _LOGGER = logging.get_logger("backlog._core.data")
+local _LOGGER = logging.get_logger("backlog._core.data.store")
 
 local constants = require("backlog._core.data.constants")
 local files = require("backlog._core.data.files")
@@ -66,6 +66,12 @@ end
 
 function M.init()
     M.store = M.load()
+
+    if #M.store.projects == 0 then
+        local m = require("backlog._compat.v0")
+        if m.migrate_to_v1() then M.store = M.load() end
+    end
+
     -- Ensure default global project exists
     if not M.find_project(constants.GLOBAL_PROJECT.id) then M.add_project(constants.GLOBAL_PROJECT) end
 end

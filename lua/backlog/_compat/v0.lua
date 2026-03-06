@@ -47,9 +47,11 @@ function M._load_v0()
 end
 
 function M.migrate_to_v1()
+    if vim.fn.filereadable(data_path) == 0 then return false end
+
     vim.notify("backlog: migrating data structure to v1")
 
-    local data = require("backlog._core.data")
+    local files = require("backlog._core.data.files")
 
     local legacy_data = M._load_v0()
 
@@ -79,13 +81,13 @@ function M.migrate_to_v1()
             end, legacy_data.tasks),
         }
 
-        if not data.save_file(tasks_path, tasks) then
+        if not files.save_file(tasks_path, tasks) then
             vim.notify("backlog: failed to save tasks " .. tasks_path, vim.log.levels.ERROR)
             failures = failures + 1
         end
     end
 
-    if not data.save_file(projects_path, projects) then
+    if not files.save_file(projects_path, projects) then
         vim.notify("backlog: failed to save projects " .. projects_path, vim.log.levels.ERROR)
         failures = failures + 1
     end
@@ -100,6 +102,8 @@ function M.migrate_to_v1()
     else
         vim.notify("backlog: data migrated with errors", vim.log.levels.WARN)
     end
+
+    return true
 end
 
 return M
