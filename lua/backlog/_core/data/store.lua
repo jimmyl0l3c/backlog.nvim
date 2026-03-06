@@ -77,11 +77,14 @@ function M.init()
 end
 
 --- Load all data to data store.
+---@return backlog.data.Store
 function M.load()
     local projects = files.load_projects(constants.PROJECTS_PATH)
+    ---@type backlog.data.Store
     local data = { projects = projects.projects, tasks = {} }
     for _, p in ipairs(projects.projects) do
-        data.tasks[p.id] = files.load_tasks(p.data_path)
+        local tasks = files.load_tasks(p.data_path)
+        if tasks then data.tasks[p.id] = tasks.tasks end
     end
     return data
 end

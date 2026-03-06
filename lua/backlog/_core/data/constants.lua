@@ -9,7 +9,7 @@ local M = {
         title = "Global",
         tags = {},
         root_path = "",
-        data_path = data_root .. "global.json",
+        data_path = data_root .. "/global.json",
     },
 
     PROJECTS_PATH = data_root .. "/projects.json",
