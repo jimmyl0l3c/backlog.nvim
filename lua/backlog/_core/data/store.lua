@@ -74,6 +74,7 @@ function M.init()
 
     -- Ensure default global project exists
     if not M.find_project(constants.GLOBAL_PROJECT.id) then M.add_project(constants.GLOBAL_PROJECT) end
+    if not M.store.tasks[constants.GLOBAL_PROJECT.id] then M.store.tasks[constants.GLOBAL_PROJECT.id] = {} end
 end
 
 --- Load all data to data store.
@@ -133,6 +134,7 @@ function M.add_project(opts)
 
     local proj = M.new_project(opts)
     table.insert(M.store.projects, proj)
+    M.store.tasks[proj.id] = {}
     return proj
 end
 
