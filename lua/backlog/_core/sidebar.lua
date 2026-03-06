@@ -1,5 +1,5 @@
 local configuration = require("backlog._core.configuration")
-local data = require("backlog._core.data")
+local store = require("backlog._core.data.store")
 local states = require("backlog._core.states")
 local compositor = require("backlog._core.rendering.compositor")
 
@@ -31,10 +31,10 @@ local function render(buf, clean)
 end
 
 local function update_items(buf, project_id)
-    local project = project_id and data.find_project(project_id) or nil
-    local items = project_id and data.tasks_for_project(project_id) or vim.tbl_extend("force", {}, data.store.tasks)
+    local project = project_id and store.find_project(project_id) or nil
+    local items = project_id and store.tasks_for_project(project_id) or store.all_tasks()
 
-    data.sort_tasks(items)
+    store.sort_tasks(items)
 
     M.project = project
     M.items = items
@@ -52,7 +52,7 @@ local function map_state(buf, key, state)
         local task, _ = M.compositor:get_item(M.cursor)
         if not task then return end
 
-        data.set_task_state(task, state)
+        store.set_task_state(task, state)
         render(buf, true)
     end, nil)
 end
@@ -120,7 +120,7 @@ local function setup_keymaps(buf)
         if not task then return end
 
         local state = task.state == states.Done and states.ToDo or states.Done
-        data.set_task_state(task, state)
+        store.set_task_state(task, state)
         render(buf, true)
     end, nil)
 
@@ -130,7 +130,7 @@ local function setup_keymaps(buf)
         vim.ui.input({ prompt = "Add task" }, function(input)
             if not input then return end
             local project_id = M.project and M.project.id or nil
-            data.add_task({ project = project_id, title = input })
+            store.add_task({ project = project_id, title = input })
             update_items(buf, project_id)
         end)
     end, nil)
@@ -141,7 +141,7 @@ local function setup_keymaps(buf)
 
         vim.ui.input({ prompt = "Add comment to task" }, function(input)
             if not input then return end
-            data.add_comment(task, input)
+            store.add_comment(task, input)
             render(buf, true)
         end)
     end, nil)
@@ -167,7 +167,7 @@ local function setup_keymaps(buf)
         if not task then return end
 
         task.priority = task.priority + vim.v.count1
-        data.sort_tasks(M.items)
+        store.sort_tasks(M.items)
 
         M.compositor:prepare(M.items)
         set_cursor(task, cid)
@@ -179,7 +179,7 @@ local function setup_keymaps(buf)
         if not task then return end
 
         task.priority = task.priority - vim.v.count1
-        data.sort_tasks(M.items)
+        store.sort_tasks(M.items)
 
         M.compositor:prepare(M.items)
         set_cursor(task, cid)
@@ -236,13 +236,13 @@ local function setup_listeners(buf)
         callback = function()
             for i = #M.pending_del, 1, -1 do
                 local id = M.pending_del[i]
-                if data.remove_task(id) then
+                if store.remove_task(id) then
                     table.remove(M.pending_del, i)
                 else
                     vim.notify("Could not delete task: " .. id, vim.log.levels.ERROR)
                 end
             end
-            data.save()
+            store.save()
             vim.bo[buf].modified = false
         end,
     })
@@ -293,7 +293,7 @@ function M.open(opts)
         M.compositor = compositor:new()
     end
 
-    local project, _ = data.resolve_project(opts)
+    local project, _ = store.resolve_project(opts)
 
     update_items(nil, (project or {}).id)
 

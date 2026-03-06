@@ -14,9 +14,9 @@ function M.make_parser()
         type = "string",
         help = "Id of the project",
         choices = function()
-            local data = require("backlog._core.data")
-            if not data.store or not data.store.projects then return {} end
-            return vim.tbl_map(function(project) return project.id end, data.store.projects)
+            local store = require("backlog._core.data.store")
+            if not store.store or not store.store.projects then return {} end
+            return vim.tbl_map(function(project) return project.id end, store.store.projects)
         end,
     })
     parser:add_parameter({

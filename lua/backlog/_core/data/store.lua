@@ -1,27 +1,16 @@
 local logging = require("mega.logging")
 
-local _LOGGER = logging.get_logger("backlog._core.data")
+local _LOGGER = logging.get_logger("backlog._core.data.store")
+
+local constants = require("backlog._core.data.constants")
+local files = require("backlog._core.data.files")
 
 local states = require("backlog._core.states")
 
-local data_root = vim.fn.stdpath("data") .. "/backlog"
-local data_path = data_root .. "/data.json"
-local detail_root = data_root .. "/detail"
-
----@type backlog.Project
-local global_project = {
-    id = "global",
-    title = "Global",
-    path = nil,
+local M = {
+    ---@type backlog.data.Store
+    store = { projects = {}, tasks = {} },
 }
-
-local M = { store = {} }
-
-local function ensure_dir()
-    local dir = vim.fn.fnamemodify(data_path, ":h")
-    if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, "p") end
-    if vim.fn.isdirectory(detail_root) == 0 then vim.fn.mkdir(detail_root, "p") end
-end
 
 math.randomseed(os.time())
 
@@ -34,10 +23,13 @@ local function uid() return string.format("%x%x", os.time(), math.random(0xffff)
 ---@return backlog.Project
 function M.new_project(opts)
     assert(opts.id, "project requires an id")
+    ---@type backlog.Project
     return {
         id = opts.id,
         title = opts.title or opts.id,
-        path = opts.path or "",
+        tags = opts.tags or {},
+        root_path = opts.root_path or "",
+        data_path = files.tasks_path(opts),
     }
 end
 
@@ -46,16 +38,17 @@ end
 ---@return backlog.Task
 function M.new_task(opts)
     assert(opts.title, "task requires a title")
+    ---@type backlog.Task
     return {
         id = uid(),
-        project = opts.project or global_project.id,
+        project = opts.project or constants.GLOBAL_PROJECT.id,
         title = opts.title,
         state = opts.state or "todo",
         deadline = opts.deadline or "",
         ticket = opts.ticket or "",
         priority = opts.priority or 100,
         detail = opts.detail or "",
-        added_timestamp = os.date("%Y-%m-%d"),
+        added_timestamp = os.date("%Y-%m-%d") --[[@as string]],
         done_timestamp = opts.done_timestamp or "",
         comments = opts.comments or {},
     }
@@ -73,35 +66,56 @@ end
 
 function M.init()
     M.store = M.load()
+
+    if #M.store.projects == 0 then
+        local m = require("backlog._compat.v0")
+        if m.migrate_to_v1() then M.store = M.load() end
+    end
+
     -- Ensure default global project exists
-    if not M.find_project(global_project.id) then M.add_project(global_project) end
+    if not M.find_project(constants.GLOBAL_PROJECT.id) then M.add_project(constants.GLOBAL_PROJECT) end
+    if not M.store.tasks[constants.GLOBAL_PROJECT.id] then M.store.tasks[constants.GLOBAL_PROJECT.id] = {} end
 end
 
---- Load data from `data.json` and return it.
+--- Load all data to data store.
+---@return backlog.data.Store
 function M.load()
-    if vim.fn.filereadable(data_path) == 0 then return { projects = {}, tasks = {} } end
-    local raw = table.concat(vim.fn.readfile(data_path), "\n")
-    local ok, data = pcall(vim.fn.json_decode, raw)
-    if not ok or type(data) ~= "table" then
-        vim.notify("backlog: failed to parse data.json", vim.log.levels.ERROR)
-        return { projects = {}, tasks = {} }
+    local projects = files.load_projects(constants.PROJECTS_PATH)
+    ---@type backlog.data.Store
+    local data = { projects = projects.projects, tasks = {} }
+    for _, p in ipairs(projects.projects) do
+        local tasks = files.load_tasks(p.data_path)
+        if tasks then data.tasks[p.id] = tasks.tasks end
     end
-    data.projects = data.projects or {}
-    data.tasks = data.tasks or {}
     return data
 end
 
 --- Save current state to file.
 ---@return boolean success
 function M.save()
-    ensure_dir()
-    local ok, encoded = pcall(vim.fn.json_encode, M.store)
-    if not ok then
-        vim.notify("backlog: failed to encode data", vim.log.levels.ERROR)
+    ---@type backlog.data.Projects
+    local projects = { version = constants.VERSION, projects = M.store.projects }
+    if not files.save_file(constants.PROJECTS_PATH, projects) then
+        vim.notify("backlog: could not save projects", vim.log.levels.ERROR)
         return false
     end
-    vim.fn.writefile({ encoded }, data_path)
-    return true
+
+    local path_map = {}
+    for _, p in ipairs(M.store.projects) do
+        path_map[p.id] = p.data_path
+    end
+
+    local failed = 0
+    for p, ts in pairs(M.store.tasks) do
+        ---@type backlog.data.Tasks
+        local tasks = { version = constants.VERSION, project = p, tasks = ts }
+        if not files.save_file(path_map[p], tasks) then
+            vim.notify("backlog: could not save tasks of " .. p, vim.log.levels.ERROR)
+            failed = failed + 1
+        end
+    end
+
+    return failed == 0
 end
 
 --- Add project to backlog
@@ -117,8 +131,10 @@ function M.add_project(opts)
         vim.notify("backlog: project id already exists: " .. opts.id, vim.log.levels.ERROR)
         return nil
     end
+
     local proj = M.new_project(opts)
     table.insert(M.store.projects, proj)
+    M.store.tasks[proj.id] = {}
     return proj
 end
 
@@ -146,7 +162,7 @@ function M.resolve_project(opts)
 
     for i, p in ipairs(M.store.projects) do
         local rel = nil
-        if p.path ~= "" then rel = vim.fs.relpath(p.path, opts.path) end
+        if p.root_path and p.root_path ~= "" then rel = vim.fs.relpath(p.root_path, opts.path) end
 
         if rel then
             _LOGGER:debug("Detected project.", rel, p)
@@ -173,7 +189,7 @@ function M.remove_project(id)
     local _, i = M.find_project(id)
     if not i then return false end
     table.remove(M.store.projects, i)
-    M.store.tasks = vim.tbl_filter(function(t) return t.project ~= id end, M.store.tasks)
+    M.store.tasks[id] = nil
     return true
 end
 
@@ -186,30 +202,41 @@ function M.add_task(opts)
         return nil
     end
 
-    opts.project = opts.project or global_project.id
+    opts.project = opts.project or constants.GLOBAL_PROJECT.id
 
     if not M.find_project(opts.project) then
         vim.notify("backlog: unknown project id: " .. (opts.project or "nil"), vim.log.levels.ERROR)
         return nil
     end
+
     local task = M.new_task(opts)
-    table.insert(M.store.tasks, task)
+    table.insert(M.store.tasks[opts.project], task)
     return task
 end
 
 --- Filter tasks by project.
 ---@param project_id string project id
 ---@return backlog.Task[]
-function M.tasks_for_project(project_id)
-    return vim.tbl_filter(function(t) return t.project == project_id end, M.store.tasks)
+function M.tasks_for_project(project_id) return vim.tbl_extend("force", {}, M.store.tasks[project_id]) end
+
+--- Return list of all tasks.
+---@return backlog.Task[]
+function M.all_tasks()
+    local all = {}
+    for _, ts in pairs(M.store.tasks) do
+        vim.list_extend(all, ts)
+    end
+    return all
 end
 
 --- Find task by id.
 ---@param id string task id
 ---@return backlog.Task? t, number? i task and its index
 function M.find_task(id)
-    for i, t in ipairs(M.store.tasks) do
-        if t.id == id then return t, i end
+    for _, ts in pairs(M.store.tasks) do
+        for i, t in ipairs(ts) do
+            if t.id == id then return t, i end
+        end
     end
     return nil
 end
@@ -218,9 +245,9 @@ end
 ---@param id string task id
 ---@return boolean success
 function M.remove_task(id)
-    local _, i = M.find_task(id)
-    if not i then return false end
-    table.remove(M.store.tasks, i)
+    local t, i = M.find_task(id)
+    if not i or not t then return false end
+    table.remove(M.store.tasks[t.project], i)
     return true
 end
 
@@ -245,21 +272,21 @@ end
 ---@param opts backlog.Task changes to apply
 ---@return backlog.Task?
 function M.edit_task(task_id, opts)
-    local p, _ = M.find_task(task_id)
-    if not p then
+    local t, _ = M.find_task(task_id)
+    if not t then
         vim.notify("backlog: task not found " .. task_id, vim.log.levels.ERROR)
         return nil
     end
 
-    p.project = opts.project or p.project
-    p.title = opts.title or p.title
-    p.deadline = opts.deadline or p.deadline
-    p.ticket = opts.ticket or p.ticket
-    p.priority = opts.priority or p.priority
-    p.detail = opts.detail or p.detail
-    p.comments = opts.comments or p.comments
+    t.project = opts.project or t.project
+    t.title = opts.title or t.title
+    t.deadline = opts.deadline or t.deadline
+    t.ticket = opts.ticket or t.ticket
+    t.priority = opts.priority or t.priority
+    t.detail = opts.detail or t.detail
+    t.comments = opts.comments or t.comments
 
-    return p
+    return t
 end
 
 --- Comparison function for strings that prefers non-empty strings.

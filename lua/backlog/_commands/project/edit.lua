@@ -15,19 +15,19 @@ local M = {}
 function M.run(id, title, path)
     _LOGGER:debug("Running project edit.", id, title, path)
 
-    local data = require("backlog._core.data")
+    local store = require("backlog._core.data.store")
 
-    local p, i = data.find_project(id)
+    local p, i = store.find_project(id)
     if not p or not i then
         vim.notify("Project not found: " .. id, vim.log.levels.ERROR)
         return
     end
 
-    data.store.projects[i] = { id = id, title = title or p.title, path = path or p.path }
+    store.store.projects[i] = { id = id, title = title or p.title, path = path or p.root_path }
 
     vim.notify("Project updated: " .. id, vim.log.levels.INFO)
 
-    if data.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
+    if store.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
 end
 
 return M

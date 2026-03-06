@@ -18,16 +18,16 @@ function M.run(id, opts)
         return
     end
 
-    local data = require("backlog._core.data")
+    local store = require("backlog._core.data.store")
 
-    if not data.edit_task(id, opts) then
+    if not store.edit_task(id, opts) then
         vim.notify("Task could not be updated: " .. id, vim.log.levels.ERROR)
         return
     end
 
     vim.notify("Task updated: " .. id, vim.log.levels.INFO)
 
-    if data.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
+    if store.save() then vim.notify("Backlog saved.", vim.log.levels.INFO) end
 end
 
 return M
