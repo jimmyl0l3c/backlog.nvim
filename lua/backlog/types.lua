@@ -37,6 +37,10 @@
 ---@field content string Comments content.
 ---@field timestamp string Created timestamp, automatically set when creating a comment.
 
+---@class backlog.data.Store
+---@field projects backlog.Project[]
+---@field tasks table<string, backlog.Task[]>
+
 ---@class backlog.ResolveProjectOpts
 ---@field project_id string?
 ---@field path string?

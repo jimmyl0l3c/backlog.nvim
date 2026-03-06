@@ -7,7 +7,10 @@ local files = require("backlog._core.data.files")
 
 local states = require("backlog._core.states")
 
-local M = { store = {} }
+local M = {
+    ---@type backlog.data.Store
+    store = { projects = {}, tasks = {} },
+}
 
 math.randomseed(os.time())
 
@@ -95,6 +98,7 @@ function M.add_project(opts)
         vim.notify("backlog: project id already exists: " .. opts.id, vim.log.levels.ERROR)
         return nil
     end
+
     local proj = M.new_project(opts)
     table.insert(M.store.projects, proj)
     return proj
@@ -124,7 +128,7 @@ function M.resolve_project(opts)
 
     for i, p in ipairs(M.store.projects) do
         local rel = nil
-        if p.path and p.path ~= "" then rel = vim.fs.relpath(p.path, opts.path) end
+        if p.root_path and p.root_path ~= "" then rel = vim.fs.relpath(p.root_path, opts.path) end
 
         if rel then
             _LOGGER:debug("Detected project.", rel, p)
@@ -151,7 +155,7 @@ function M.remove_project(id)
     local _, i = M.find_project(id)
     if not i then return false end
     table.remove(M.store.projects, i)
-    M.store.tasks = vim.tbl_filter(function(t) return t.project ~= id end, M.store.tasks)
+    M.store.tasks[id] = nil
     return true
 end
 
@@ -170,24 +174,25 @@ function M.add_task(opts)
         vim.notify("backlog: unknown project id: " .. (opts.project or "nil"), vim.log.levels.ERROR)
         return nil
     end
+
     local task = M.new_task(opts)
-    table.insert(M.store.tasks, task)
+    table.insert(M.store.tasks[opts.project], task)
     return task
 end
 
 --- Filter tasks by project.
 ---@param project_id string project id
 ---@return backlog.Task[]
-function M.tasks_for_project(project_id)
-    return vim.tbl_filter(function(t) return t.project == project_id end, M.store.tasks)
-end
+function M.tasks_for_project(project_id) return vim.tbl_extend("force", {}, M.store.tasks[project_id]) end
 
 --- Find task by id.
 ---@param id string task id
 ---@return backlog.Task? t, number? i task and its index
 function M.find_task(id)
-    for i, t in ipairs(M.store.tasks) do
-        if t.id == id then return t, i end
+    for _, ts in pairs(M.store.tasks) do
+        for i, t in ipairs(ts) do
+            if t.id == id then return t, i end
+        end
     end
     return nil
 end
@@ -196,9 +201,9 @@ end
 ---@param id string task id
 ---@return boolean success
 function M.remove_task(id)
-    local _, i = M.find_task(id)
-    if not i then return false end
-    table.remove(M.store.tasks, i)
+    local t, i = M.find_task(id)
+    if not i or not t then return false end
+    table.remove(M.store.tasks[t.project], i)
     return true
 end
 
@@ -223,21 +228,21 @@ end
 ---@param opts backlog.Task changes to apply
 ---@return backlog.Task?
 function M.edit_task(task_id, opts)
-    local p, _ = M.find_task(task_id)
-    if not p then
+    local t, _ = M.find_task(task_id)
+    if not t then
         vim.notify("backlog: task not found " .. task_id, vim.log.levels.ERROR)
         return nil
     end
 
-    p.project = opts.project or p.project
-    p.title = opts.title or p.title
-    p.deadline = opts.deadline or p.deadline
-    p.ticket = opts.ticket or p.ticket
-    p.priority = opts.priority or p.priority
-    p.detail = opts.detail or p.detail
-    p.comments = opts.comments or p.comments
+    t.project = opts.project or t.project
+    t.title = opts.title or t.title
+    t.deadline = opts.deadline or t.deadline
+    t.ticket = opts.ticket or t.ticket
+    t.priority = opts.priority or t.priority
+    t.detail = opts.detail or t.detail
+    t.comments = opts.comments or t.comments
 
-    return p
+    return t
 end
 
 --- Comparison function for strings that prefers non-empty strings.
