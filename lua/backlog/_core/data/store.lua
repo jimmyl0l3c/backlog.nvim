@@ -208,6 +208,16 @@ end
 ---@return backlog.Task[]
 function M.tasks_for_project(project_id) return vim.tbl_extend("force", {}, M.store.tasks[project_id]) end
 
+--- Return list of all tasks.
+---@return backlog.Task[]
+function M.all_tasks()
+    local all = {}
+    for _, ts in pairs(M.store.tasks) do
+        vim.list_extend(all, ts)
+    end
+    return all
+end
+
 --- Find task by id.
 ---@param id string task id
 ---@return backlog.Task? t, number? i task and its index
