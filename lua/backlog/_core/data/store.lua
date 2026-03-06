@@ -73,16 +73,39 @@ end
 --- Load all data to data store.
 function M.load()
     local projects = files.load_projects(constants.PROJECTS_PATH)
-    local data = { projects = projects, tasks = {} }
-    -- TODO: load tasks
+    local data = { projects = projects.projects, tasks = {} }
+    for _, p in ipairs(projects.projects) do
+        data.tasks[p.id] = files.load_tasks(p.data_path)
+    end
     return data
 end
 
 --- Save current state to file.
 ---@return boolean success
 function M.save()
-    -- TODO: implement
-    return false
+    ---@type backlog.data.Projects
+    local projects = { version = constants.VERSION, projects = M.store.projects }
+    if not files.save_file(constants.PROJECTS_PATH, projects) then
+        vim.notify("backlog: could not save projects", vim.log.levels.ERROR)
+        return false
+    end
+
+    local path_map = {}
+    for _, p in ipairs(M.store.projects) do
+        path_map[p.id] = p.data_path
+    end
+
+    local failed = 0
+    for p, ts in pairs(M.store.tasks) do
+        ---@type backlog.data.Tasks
+        local tasks = { version = constants.VERSION, project = p, tasks = ts }
+        if not files.save_file(path_map[p], tasks) then
+            vim.notify("backlog: could not save tasks of " .. p, vim.log.levels.ERROR)
+            failed = failed + 1
+        end
+    end
+
+    return failed == 0
 end
 
 --- Add project to backlog
